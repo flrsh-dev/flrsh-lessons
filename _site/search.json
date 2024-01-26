@@ -1,0 +1,121 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "flrsh lessons rendered as a quarto site",
+    "section": "",
+    "text": "About\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\ndplyr is production\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "dplyr-for-prod/drafts.html",
+    "href": "dplyr-for-prod/drafts.html",
+    "title": "dplyr is production",
+    "section": "",
+    "text": "knitr::opts_chunk$set(error = TRUE)"
+  },
+  {
+    "objectID": "dplyr-for-prod/drafts.html#outline",
+    "href": "dplyr-for-prod/drafts.html#outline",
+    "title": "dplyr is production",
+    "section": "Outline:",
+    "text": "Outline:\n\npre-reqs\npreface\neager evaluation\nlazy evaluation\nlazy tables\ncomposable codex"
+  },
+  {
+    "objectID": "dplyr-for-prod/drafts.html#prerequisites",
+    "href": "dplyr-for-prod/drafts.html#prerequisites",
+    "title": "dplyr is production",
+    "section": "Prerequisites",
+    "text": "Prerequisites\nI wont teach you how to select columns, filter rows, use cool dplyr verbs or talk about non-standard evaluation. I’m not really interested in that. Nor am I the best person to teach you that. But rather, I want to teach you how dplyr is ready to be used in production. I want to show you how you can write dplyr code that can scale. The same code can run on a few thousand rows, tens of thousands, and millions of rows all with very little change to your existing dplyr code. These lessons are to encourage you to think about your code differently. Not as R code, but as production-grade data engineering code."
+  },
+  {
+    "objectID": "dplyr-for-prod/drafts.html#preface",
+    "href": "dplyr-for-prod/drafts.html#preface",
+    "title": "dplyr is production",
+    "section": "Preface",
+    "text": "Preface\ndplyr’s impact on data science often goes under-recognized. It is known most often for its readable syntax and chainable expression. dplyr’s undeniable ergonomics has led to impersonations and derivations across languages: from the many python implementations such as siuba, dplython, redframes, dfply, and now the great Ibis project—which, as you’ll see, shares more than just syntax—and I’m sure many more. One can also see the influence of dplyr’s syntax in Polars, the powerful rust based dataframe library with navtive bindings to python and community provided bindings to R. The TidierData.jl library is a 100% Julia implementation that “stick[s] as closely to tidyverse syntax as possible.”\nThey say that imitation is the highest form of flattery. But in this case, I think it also speaks to the impact made by dplyr and the broader tidyverse ecosystem."
+  },
+  {
+    "objectID": "dplyr-for-prod/drafts.html#r-and-evaluation",
+    "href": "dplyr-for-prod/drafts.html#r-and-evaluation",
+    "title": "dplyr is production",
+    "section": "R and evaluation",
+    "text": "R and evaluation\nBefore we dive into the nuts and bolts of how what makes dplyr so powerful in production code, we need to first have a good understanding of the two primary types of evaluation strategies in R. We need to first be able to understand the distinction between eager and lazy evaluation."
+  },
+  {
+    "objectID": "dplyr-for-prod/drafts.html#what-does-it-mean-to-be-eager",
+    "href": "dplyr-for-prod/drafts.html#what-does-it-mean-to-be-eager",
+    "title": "dplyr is production",
+    "section": "What does it mean to be “eager?”",
+    "text": "What does it mean to be “eager?”\ndplyr, and the vast majority of code that we run in R is eagerly evaluated.\n\nlibrary(dplyr)\n\n\nAttaching package: 'dplyr'\n\n\nThe following objects are masked from 'package:stats':\n\n    filter, lag\n\n\nThe following objects are masked from 'package:base':\n\n    intersect, setdiff, setequal, union\n\nskin_colors &lt;- starwars |&gt;\n  count(skin_color) |&gt;\n  arrange(-n)\n\nWhen we execute this expression, it runs right to completion no questions asked. Eager evaluation wants to get the job done right then and there. Most functions that we use in R are eagerly evaluated. You run them, wait for them to come to completion, then have the results.\nBut being quick on the draw is not always the most effective use of time. Sometimes it pays to be lazy. This is particularly true when working with large datasets. A less common approach is lazy evaluation."
+  },
+  {
+    "objectID": "dplyr-for-prod/drafts.html#being-lazy-pays-off",
+    "href": "dplyr-for-prod/drafts.html#being-lazy-pays-off",
+    "title": "dplyr is production",
+    "section": "Being lazy pays off",
+    "text": "Being lazy pays off\n\nLazy evaluation, or sometimes referred to as “call-by-need”, delays execution until the very last moment. In R, function arguments are lazily evaluated. That means that the value of them are not computed until they are actually needed. This is very powerful! It let’s us write code like this:\n\nlazyy &lt;- function(x, y = x + 2) {\n  x + y\n}\n\nlazyy(2)\n\n[1] 6\n\n\nThe value of y is set to the value of x plus 2 but we don’t actually know the value of x until it’s provided as an argument. For a bit clearer example, take, this function.\n\nhello_world &lt;- function(x) {\n  \"hello world\"\n}\n\nhello_world()\n\n[1] \"hello world\"\n\n\nIt prints \"hello world\", but did you notice something? We provided an argument x, that is never used! Since the argument x is never used, and arguments are lazily evaluated, it will never be executed. That means we can commit crimes in the x argument but never get caught.\n\nhello_world(stop(\"You shall not pass!!\"))\n\n[1] \"hello world\"\n\n\nWe’ve tried to abort the function by calling stop() in the function argument. No dice.\nLet’s try another example where we conditionally evaluate an argument.\n\nnull_or_y &lt;- function(x, y) {\n  if (isTRUE(x)) {\n    y\n  } else {\n    NULL\n  }\n}\n\nWith this function we can pass a value of TRUE and it will return the value of y, if the value is FALSE, then function will return NULL.\nWhen x = TRUE, the argument y is evaluated.\n\nnull_or_y(TRUE, stop(\"stop right there! 👮🏻‍♂️\"))\n\nError in null_or_y(TRUE, stop(\"stop right there! 👮🏻‍♂️\")): stop right there! 👮🏻‍♂️\n\n\nHowever, if we provide FALSE…\n\nnull_or_y(FALSE, stop(\"stop right there! 👮🏻‍♂️\"))\n\nNULL\n\n\nNo error is emitted, and we get NULL returned back to us."
+  },
+  {
+    "objectID": "dplyr-for-prod/drafts.html#create-your-own-lazy-function",
+    "href": "dplyr-for-prod/drafts.html#create-your-own-lazy-function",
+    "title": "dplyr is production",
+    "section": "Create your own lazy function",
+    "text": "Create your own lazy function\nTODO make exercise with lazy evaluation in a function"
+  },
+  {
+    "objectID": "dplyr-for-prod/drafts.html#making-dplyr-lazy",
+    "href": "dplyr-for-prod/drafts.html#making-dplyr-lazy",
+    "title": "dplyr is production",
+    "section": "Making dplyr lazy",
+    "text": "Making dplyr lazy\ndplyr extends this concept of this laziness to data.frames and tables more generally. We’ll explore the concept of lazy tables through the package {dtplyr}.\nIn the R community there has been this debate of base R versus dplyr versus data.table for years now. It is very divisive. It’s so divisive that I actually lost a job at DataCamp because of it. Though that’s a story to be shared over a beer.\ndata.table is another data.frame oriented data manipulation package. It is indisputably, until recently with the publication of collapse, the fastest in memory data.frame manipulation package in the R ecosystem. However, to use data.table, one has to learn a fairly idiosyncratic “i, j, by” syntax (data.table uses super-powered version of base R’s bracket indexing). Learning a new syntax can be a deterrent which is why I think data.table is not as widely adopted as perhaps ought to be.\nAs a motivating example, let’s adapt the example from the Introduction to data.table vignette.\nUsing the nycflights13 dataset, we can count the number of American Airlines flights by origin, destinations, and arrange them. Using traditional dplyr our code might look like this:\n\nlibrary(dplyr)\nlibrary(nycflights13)\n\nflights |&gt;\n  filter(carrier == \"AA\") |&gt;\n  count(origin, dest) |&gt;\n  arrange(origin, desc(dest))\n\n# A tibble: 25 × 3\n   origin dest      n\n   &lt;chr&gt;  &lt;chr&gt; &lt;int&gt;\n 1 EWR    MIA    1068\n 2 EWR    LAX     365\n 3 EWR    DFW    2054\n 4 JFK    TPA     311\n 5 JFK    STT     303\n 6 JFK    SJU    1099\n 7 JFK    SFO    1422\n 8 JFK    SEA     365\n 9 JFK    SAN     365\n10 JFK    ORD     365\n# ℹ 15 more rows\n\n\nThe same code can be written fairly succinctly with data.table. However, if you don’t know the syntax very well, like I don’t, it can be quite terse.\n\nlibrary(data.table)\n\n\nAttaching package: 'data.table'\n\n\nThe following objects are masked from 'package:dplyr':\n\n    between, first, last\n\n# create a copy so that data.table can modify by reference\nfl &lt;- setDT(copy(flights))\n\nfl[carrier == \"AA\", .N, by = .(origin, dest)][order(origin, -dest)]\n\n    origin dest    N\n 1:    EWR  MIA 1068\n 2:    EWR  LAX  365\n 3:    EWR  DFW 2054\n 4:    JFK  TPA  311\n 5:    JFK  STT  303\n 6:    JFK  SJU 1099\n 7:    JFK  SFO 1422\n 8:    JFK  SEA  365\n 9:    JFK  SAN  365\n10:    JFK  ORD  365\n11:    JFK  MIA 2221\n12:    JFK  MCO  730\n13:    JFK  LAX 3217\n14:    JFK  LAS  639\n15:    JFK  IAH  274\n16:    JFK  FLL  182\n17:    JFK  EGE  103\n18:    JFK  DFW  367\n19:    JFK  BOS 1455\n20:    JFK  AUS  365\n21:    LGA  STL  902\n22:    LGA  PBI   82\n23:    LGA  ORD 5694\n24:    LGA  MIA 3945\n25:    LGA  DFW 4836\n    origin dest    N\n\n\nDid it feel faster? I don’t know if you could tell the difference from this one example, but I can assure you, it is faster. Let’s take a look by creating a bench::mark().\n\n\n\n\n\n\nNote\n\n\n\nbench::mark() works by providing named expressions that are each evaluated and time multiple times.\n\n\n\nbench::mark(\n  dplyr = {\n    flights |&gt;\n      filter(carrier == \"AA\") |&gt;\n      count(origin, dest) |&gt;\n      arrange(origin, desc(dest))\n  },\n  dt = fl[carrier == \"AA\", .N, by = .(origin, dest)][order(origin, -dest)],\n  check = FALSE\n)\n\n# A tibble: 2 × 6\n  expression      min   median `itr/sec` mem_alloc `gc/sec`\n  &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;\n1 dplyr        7.73ms   8.37ms      118.   10.35MB     24.7\n2 dt           1.75ms   1.87ms      534.    2.26MB     26.6\n\n\nIn this bench mark, data.table is just about 4.5 times faster than dplyr! That’s nothing to scoff at. Maybe even more significantly, data.table used far less memory! Sure, 10mb isn’t too much now. But what about when we’re working with 10 million rows in memory? You will feel the difference then.\nTo get this level of performance, you don’t have to actually start writing data.table code. You can instead use dtplyr.\n\nlibrary(dtplyr)\n\nfl_lazy &lt;- lazy_dt(flights)\n\nfl_lazy |&gt;\n  filter(carrier == \"AA\") |&gt;\n  count(origin, dest) |&gt;\n  arrange(origin, desc(dest))\n\nSource: local data table [25 x 3]\nCall:   setorder(`_DT1`[carrier == \"AA\"][, .(n = .N), keyby = .(origin, \n    dest)], origin, -dest, na.last = TRUE)\n\n  origin dest      n\n  &lt;chr&gt;  &lt;chr&gt; &lt;int&gt;\n1 EWR    MIA    1068\n2 EWR    LAX     365\n3 EWR    DFW    2054\n4 JFK    TPA     311\n5 JFK    STT     303\n6 JFK    SJU    1099\n# ℹ 19 more rows\n\n# Use as.data.table()/as.data.frame()/as_tibble() to access results\n\n\nThe lazy_dt() function is the key here. It creates a dtplyr_step object which allows us to make use of data.table via dplyr functions. The print method of the results are very informative. We’ll dive into this in the next section. But before then, Let’s make another bench mark to compare the results. Don’t worry about all of the code in there, we’ll go over it shortly.\n\nbench::mark(\n  dtplyr = {\n    fl_lazy |&gt;\n      filter(carrier == \"AA\") |&gt;\n      count(origin, dest) |&gt;\n      arrange(origin, desc(dest)) |&gt;\n      collect()\n  },\n  dt = fl[carrier == \"AA\", .N, by = .(origin, dest)][order(origin, -dest)],\n  check = FALSE\n)\n\n# A tibble: 2 × 6\n  expression      min   median `itr/sec` mem_alloc `gc/sec`\n  &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;\n1 dtplyr        4.5ms   4.83ms      207.    5.04MB     22.2\n2 dt           1.74ms   1.84ms      543.    2.26MB     24.1"
+  },
+  {
+    "objectID": "dplyr-for-prod/drafts.html#understanding-the-lazy-table",
+    "href": "dplyr-for-prod/drafts.html#understanding-the-lazy-table",
+    "title": "dplyr is production",
+    "section": "Understanding the lazy table",
+    "text": "Understanding the lazy table\nIn the previous section we created what is referred to as a lazy table. Let’s spend some time understanding what we did. The function lazy_dt() converted our tibble into a lazy data.table.\nThe manual page for lazy_dt() says\n\n“A lazy data.table captures the intent of dplyr verbs, only actually performing computation when requested…”\n\nThis is similar to the concept of lazy function argument evaluation. But instead of delaying evaluation, dtplyr is building up an expression that will eventually be evaluated.\n\nres &lt;- \n    fl_lazy |&gt;\n      filter(carrier == \"AA\") |&gt;\n      count(origin, dest) |&gt;\n      arrange(origin, desc(dest))\n\nres\n\nSource: local data table [25 x 3]\nCall:   setorder(`_DT1`[carrier == \"AA\"][, .(n = .N), keyby = .(origin, \n    dest)], origin, -dest, na.last = TRUE)\n\n  origin dest      n\n  &lt;chr&gt;  &lt;chr&gt; &lt;int&gt;\n1 EWR    MIA    1068\n2 EWR    LAX     365\n3 EWR    DFW    2054\n4 JFK    TPA     311\n5 JFK    STT     303\n6 JFK    SJU    1099\n# ℹ 19 more rows\n\n# Use as.data.table()/as.data.frame()/as_tibble() to access results\n\n\nAbove the data preview we can see the Call that has been created. dtplyr is translating our dplyr code into data.table code. In essence, our dplyr code is acting as a front-end while data.table is acting the back-end. In this case, the front-end is the user-facing interface—in this case the user is the developer—and the backend is where the computation is occurring. We can see the translation that dtplyr has built up by using dplyr::show_query().\n\nshow_query(res)\n\nsetorder(`_DT1`[carrier == \"AA\"][, .(n = .N), keyby = .(origin, \n    dest)], origin, -dest, na.last = TRUE)\n\n\ndtplyr is essentially acting is a translator between a common syntax in dplyr and an execution engine in data.table. dtplyr is being lazy in that it is not running any code but instead it is building up a set of instructions that will be executed.\nTo make dtplyr actually execute the code that it has built up, we need to request the results. This is done by using dplyr::collect().\n\n\n\n\n\n\nNote\n\n\n\nNote that you can also use as.data.table(), as_tibble(), as.data.frame() to bring the results into a data.frame.\n\n\n\ncollect(res)\n\n# A tibble: 25 × 3\n   origin dest      n\n   &lt;chr&gt;  &lt;chr&gt; &lt;int&gt;\n 1 EWR    MIA    1068\n 2 EWR    LAX     365\n 3 EWR    DFW    2054\n 4 JFK    TPA     311\n 5 JFK    STT     303\n 6 JFK    SJU    1099\n 7 JFK    SFO    1422\n 8 JFK    SEA     365\n 9 JFK    SAN     365\n10 JFK    ORD     365\n# ℹ 15 more rows"
+  },
+  {
+    "objectID": "dplyr-for-prod/drafts.html#the-composable-codex",
+    "href": "dplyr-for-prod/drafts.html#the-composable-codex",
+    "title": "dplyr is production",
+    "section": "The composable codex",
+    "text": "The composable codex\n\ncomposable data ecosystem\nmodularity https://ibis-project.org/concepts/composable-ecosystem.html\n\n\nlibrary(dplyr)\nlibrary(dtplyr)\nlibrary(nycflights13)\n\ncon &lt;- dbplyr::src_memdb()\ncopy_to(con, nycflights13::flights, name = \"flights\")\n\nflights &lt;- tbl(con, \"nycflights13::flights\")\n\nError in `db_query_fields.DBIConnection()`:\n! Can't query fields.\nCaused by error:\n! no such table: nycflights13::flights\n\n# nothing has happened yet...\navg_delay &lt;- flights |&gt;\n  filter(month == 1) |&gt;\n  group_by(carrier) |&gt;\n  summarise(\n    min_delay = min(dep_delay),\n    max_delay = max(dep_delay),\n    avg_delay = mean(dep_delay)\n  ) |&gt;\n  arrange(-avg_delay)\n\n\nmultiple objects\ncomplex joins and queries by creating sub-queries\ncreating multiple objects has no cost because it’s lazy"
+  },
+  {
+    "objectID": "dplyr-for-prod/drafts.html#composable-codex---modularity",
+    "href": "dplyr-for-prod/drafts.html#composable-codex---modularity",
+    "title": "dplyr is production",
+    "section": "Composable codex - modularity",
+    "text": "Composable codex - modularity"
+  },
+  {
+    "objectID": "dplyr-for-prod/drafts.html#scaling-up-from-traditional-dplyr-code",
+    "href": "dplyr-for-prod/drafts.html#scaling-up-from-traditional-dplyr-code",
+    "title": "dplyr is production",
+    "section": "Scaling up from traditional dplyr code",
+    "text": "Scaling up from traditional dplyr code"
+  },
+  {
+    "objectID": "dplyr-for-prod/drafts.html#dtplyr",
+    "href": "dplyr-for-prod/drafts.html#dtplyr",
+    "title": "dplyr is production",
+    "section": "dtplyr",
+    "text": "dtplyr\n\nmutability / immutability\nor, copy on modify https://stackoverflow.com/questions/15759117/what-exactly-is-copy-on-modify-semantics-in-r-and-where-is-the-canonical-source"
+  },
+  {
+    "objectID": "dplyr-for-prod/drafts.html#learning-objectives",
+    "href": "dplyr-for-prod/drafts.html#learning-objectives",
+    "title": "dplyr is production",
+    "section": "Learning Objectives",
+    "text": "Learning Objectives\n\nconceptually, want to make it clear that writing dplyr is writing SQL\nlearn about lazy computation\n\nOutline:\n\nWhat dplyr is\nIt pays to be lazy\n\nlazy vs eager computation\n\ndplyr is eager\ndatabases are lazy\n\n\ncomposable data systems\ndplyr is a syntax that acts as a developer oriented API that is agnostic to the backend that is used\n\nit allows for a distinction between the “front-end” and the “back-end”\n\nwith dplyr, you can manipulate data.frames in memory, yah sure, that’s just the beginning.\nOther supported dplyr backends:\n\ndata.table\nduckdb\narrow\napache spark\n\n\n“DBI separates the connectivity to the DBMS into a “front-end” and a “back-end”.” - https://dbi.r-dbi.org/ - many R packages have been built upon it to provide database connectivity to R - some of the supported database back-ends - Postgres, MariaDB, BigQuery - odbc connections and more if using Posit professional drivers\nMotivation: - you can prototype code on simple csv files - the same dplyr code can then be used on bigger and bigger data just by changing the bac end - it also can be helpful in making it easier to avoid vendor lock in because the only vendor dependent code is going to be the connection object\nAt NPD we trained SAS users on dplyr. Much of the SAS scripts involed first getting data from our databases and pre-processing it using proc sql. They would rewrite their code using dplyr and a csv file. Then we plugged it into spark with databricks with very little effort after that.\nMy recommendation for using dplyr:\n\nstart with basic dplyr for &lt; 1m rows or when spending a few seconds computing isn’t that big of a deal\nif you need to scale it a bit then I would recommend using a lazy data.table\nat the end of the day, we want to bring as little into R’s memory as we possibly.\n\nRestrictions:\n\nyou cannot mix R functions with SQL\nsome stringr functions have dbplyr support\n\nTo cover:\n\nlaziness in tables\ndplyr remote table functions\ndbplyr\n\nhttps://dbplyr.tidyverse.org/articles/sql.html#what-happens-when-dbplyr-failsx\n\ncreating DBI connections\n{pool} for managing multiple connections https://rstudio.github.io/pool/\n\nScheduling? Rscript, bash, cron\nwhen using dbplyr try to work with tables don’t use %in% with sql its slow. Instead use a filtering join like semi join\n\nhttps://www.youtube.com/watch?v=QC7WktPt7ow\n“[dbplyr] takes R from just a simple tool to an incredibly powerful analysis platform”\ndbplyr is for RDBMS relational database management systems\ndplyr is the inspiration for ibis in the python ecosystem https://www.youtube.com/watch?v=XRxUeL3bQfQ&t=955s\narrow database connector https://cloud.r-project.org/web/packages/adbi/index.html"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "About this site\n\n1 + 1\n\n[1] 2"
+  }
+]

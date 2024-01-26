@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>dplyr is production</title>
+<title>flrsh-site - dplyr is production</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -57,24 +57,112 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="drafts_files/libs/clipboard/clipboard.min.js"></script>
-<script src="drafts_files/libs/quarto-html/quarto.js"></script>
-<script src="drafts_files/libs/quarto-html/popper.min.js"></script>
-<script src="drafts_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="drafts_files/libs/quarto-html/anchor.min.js"></script>
-<link href="drafts_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="drafts_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="drafts_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="drafts_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="drafts_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
 
 
+<link rel="stylesheet" href="../styles.css">
 </head>
 
-<body class="fullcontent">
+<body class="nav-fixed">
 
-<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
-
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">flrsh-site</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+          <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#outline" id="toc-outline" class="nav-link active" data-scroll-target="#outline">Outline:</a></li>
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#preface" id="toc-preface" class="nav-link" data-scroll-target="#preface">Preface</a></li>
+  <li><a href="#r-and-evaluation" id="toc-r-and-evaluation" class="nav-link" data-scroll-target="#r-and-evaluation">R and evaluation</a></li>
+  <li><a href="#what-does-it-mean-to-be-eager" id="toc-what-does-it-mean-to-be-eager" class="nav-link" data-scroll-target="#what-does-it-mean-to-be-eager">What does it mean to be “eager?”</a></li>
+  <li><a href="#being-lazy-pays-off" id="toc-being-lazy-pays-off" class="nav-link" data-scroll-target="#being-lazy-pays-off">Being lazy pays off</a></li>
+  <li><a href="#create-your-own-lazy-function" id="toc-create-your-own-lazy-function" class="nav-link" data-scroll-target="#create-your-own-lazy-function">Create your own lazy function</a></li>
+  <li><a href="#making-dplyr-lazy" id="toc-making-dplyr-lazy" class="nav-link" data-scroll-target="#making-dplyr-lazy">Making dplyr lazy</a></li>
+  <li><a href="#understanding-the-lazy-table" id="toc-understanding-the-lazy-table" class="nav-link" data-scroll-target="#understanding-the-lazy-table">Understanding the lazy table</a></li>
+  <li><a href="#the-composable-codex" id="toc-the-composable-codex" class="nav-link" data-scroll-target="#the-composable-codex">The composable codex</a></li>
+  <li><a href="#composable-codex---modularity" id="toc-composable-codex---modularity" class="nav-link" data-scroll-target="#composable-codex---modularity">Composable codex - modularity</a></li>
+  <li><a href="#scaling-up-from-traditional-dplyr-code" id="toc-scaling-up-from-traditional-dplyr-code" class="nav-link" data-scroll-target="#scaling-up-from-traditional-dplyr-code">Scaling up from traditional dplyr code</a></li>
+  <li><a href="#dtplyr" id="toc-dtplyr" class="nav-link" data-scroll-target="#dtplyr">dtplyr</a></li>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link" data-scroll-target="#learning-objectives">Learning Objectives</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -320,8 +408,8 @@ Note
 <pre><code># A tibble: 2 × 6
   expression      min   median `itr/sec` mem_alloc `gc/sec`
   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;
-1 dplyr        7.87ms   8.55ms      114.   10.35MB     24.9
-2 dt           1.82ms   2.02ms      474.    2.26MB     22.0</code></pre>
+1 dplyr        7.73ms   8.37ms      118.   10.35MB     24.7
+2 dt           1.75ms   1.87ms      534.    2.26MB     26.6</code></pre>
 </div>
 </div>
 <p>In this bench mark, data.table is just about 4.5 times <em>faster</em> than dplyr! That’s nothing to scoff at. Maybe even more significantly, data.table used far less memory! Sure, 10mb isn’t too much now. But what about when we’re working with 10 million rows in memory? You <em>will</em> feel the difference then.</p>
@@ -370,8 +458,8 @@ Call:   setorder(`_DT1`[carrier == "AA"][, .(n = .N), keyby = .(origin,
 <pre><code># A tibble: 2 × 6
   expression      min   median `itr/sec` mem_alloc `gc/sec`
   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;
-1 dtplyr       4.64ms   5.07ms      193.    5.04MB     23.5
-2 dt           1.74ms   1.87ms      534.    2.26MB     10.7</code></pre>
+1 dtplyr        4.5ms   4.83ms      207.    5.04MB     22.2
+2 dt           1.74ms   1.84ms      543.    2.26MB     24.1</code></pre>
 </div>
 </div>
 </section>
@@ -409,31 +497,48 @@ Call:   setorder(`_DT1`[carrier == "AA"][, .(n = .N), keyby = .(origin,
 # Use as.data.table()/as.data.frame()/as_tibble() to access results</code></pre>
 </div>
 </div>
-<p>Above the data preview we can see the <code>Call</code> that has been created. dtplyr is <em>translating</em> our dplyr code into data.table code. In essence, our dplyr code is acting as a <strong>front-end</strong> while data.table is acting the <strong>back-end</strong>. In this case, the front-end is the user-facing interface—in this case the user is the developer—and the backend is where the computation is occurring.</p>
-<p>dtplyr is essentially acting is a translator between a common syntax in dplyr and an execution engine in data.table. dtplyr is being lazy in that it is not running any code but instead it is building up a set of instructions that will be executed.</p>
-<p>To make dtplyr actually execute the code that it has built up, we need to</p>
-<p>assign the result of the dtplyr command and time how long this takes</p>
+<p>Above the data preview we can see the <code>Call</code> that has been created. dtplyr is <em>translating</em> our dplyr code into data.table code. In essence, our dplyr code is acting as a <strong>front-end</strong> while data.table is acting the <strong>back-end</strong>. In this case, the front-end is the user-facing interface—in this case the user is the developer—and the backend is where the computation is occurring. We can see the translation that dtplyr has built up by using <code>dplyr::show_query()</code>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(</span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  res <span class="ot">&lt;-</span> fl_lazy <span class="sc">|&gt;</span></span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(carrier <span class="sc">==</span> <span class="st">"AA"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">count</span>(origin, dest) <span class="sc">|&gt;</span></span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(origin, <span class="fu">desc</span>(dest))</span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>   user  system elapsed 
-  0.003   0.000   0.003 </code></pre>
-</div>
-</div>
-<p>Nothing was executed. Instead, dtplyr just created a set of instructions that will be executed later. We can investigate them with <code>show_query()</code></p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">show_query</span>(res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">show_query</span>(res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>setorder(`_DT1`[carrier == "AA"][, .(n = .N), keyby = .(origin, 
     dest)], origin, -dest, na.last = TRUE)</code></pre>
 </div>
 </div>
-<p>In order to execute the generate code, we have to explicitly instruct it to do so. This is can be done by either calling the function <code>collect()</code> which will <em>collect</em> the results into a tibble. Or, we can use the functions <code>as.data.frame()</code>, <code>as.data.table()</code> or <code>as_tibble()</code> to choose how we want the results stored.</p>
+<p>dtplyr is essentially acting is a translator between a common syntax in dplyr and an execution engine in data.table. dtplyr is being lazy in that it is not running any code but instead it is building up a set of instructions that will be executed.</p>
+<p>To make dtplyr actually execute the code that it has built up, we need to request the results. This is done by using <code>dplyr::collect()</code>.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Note that you can also use <code>as.data.table()</code>, <code>as_tibble()</code>, <code>as.data.frame()</code> to bring the results into a data.frame.</p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect</span>(res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 25 × 3
+   origin dest      n
+   &lt;chr&gt;  &lt;chr&gt; &lt;int&gt;
+ 1 EWR    MIA    1068
+ 2 EWR    LAX     365
+ 3 EWR    DFW    2054
+ 4 JFK    TPA     311
+ 5 JFK    STT     303
+ 6 JFK    SJU    1099
+ 7 JFK    SFO    1422
+ 8 JFK    SEA     365
+ 9 JFK    SAN     365
+10 JFK    ORD     365
+# ℹ 15 more rows</code></pre>
+</div>
+</div>
 </section>
 <section id="the-composable-codex" class="level2">
 <h2 class="anchored" data-anchor-id="the-composable-codex">The composable codex</h2>
@@ -550,10 +655,11 @@ Caused by error:
 <p>dbplyr is for RDBMS relational database management systems</p>
 <p>dplyr is the inspiration for ibis in the python ecosystem https://www.youtube.com/watch?v=XRxUeL3bQfQ&amp;t=955s</p>
 <p>arrow database connector https://cloud.r-project.org/web/packages/adbi/index.html</p>
+
+
 </section>
 
-</main>
-<!-- /main column -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

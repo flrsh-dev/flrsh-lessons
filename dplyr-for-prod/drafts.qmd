@@ -233,19 +233,9 @@ To make dtplyr actually execute the code that it has built up, we need to reques
 Note that you can also use `as.data.table()`, `as_tibble()`, `as.data.frame()` to bring the results into a data.frame.
 :::
 
-
 ```{r}
-
+collect(res)
 ```
-
-```{r}
-show_query(res)
-```
-
-
-
-In order to execute the generate code, we have to explicitly instruct it to do so. This is can be done by either calling the function `collect()` which will _collect_ the results into a tibble. Or, we can use the functions `as.data.frame()`, `as.data.table()` or `as_tibble()` to choose how we want the results stored.
-
 
 
 ## The composable codex
