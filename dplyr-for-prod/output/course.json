@@ -1,0 +1,30 @@
+{
+    "course": {
+        "title": "Scale in production with dplyr",
+        "author": "Josiah Parry",
+        "description": "`{dplyr}` is a perfect tool for scaling your analytics work flow. With `dplyr`, the same code can scale from a few thousand rows, tens of thousands, to millions of rows all with very little changes.\n\nIn this course I teach you about eager and lazy evaluation. The `{dtplyr}` package is introduced and used to illustrate how simple dplyr code can be scaled without any changes.\n",
+        "summary": "With nothing but dplyr, scale your data pipelines from thousands to tens of millions of records without changing your code. \n",
+        "categories": [
+            "dplyr",
+            "production"
+        ]
+    },
+    "chapters": [
+        {
+            "title": "Introduction",
+            "description": "dplyr is more than just a syntax; it's a frontend UI for data analysis, allowing users to write data manipulation instructions that can be executed in various backends. The dplyr API ecosystem includes packages like dbplyr, multidplyr, and sparklyr, which enable execution of dplyr code in different environments."
+        },
+        {
+            "title": "It pays to be lazy",
+            "description": "In R, there are two primary evaluation strategies: eager and lazy.  Understanding lazy evaluation is key to harnessing dplyr's power in production code."
+        },
+        {
+            "title": "lazy tables & dtplyr",
+            "description": "Get hands on with lazy tables with the `dtplyr` package. Swapping backends to be used with dplyr is as simple as one extra line of code and the performance gains are nothing to scoff at. "
+        },
+        {
+            "title": "Missed connections 👋🏼",
+            "description": "A common pattern emerges when working with different data sources. Build a mental model on how to adapt to new data sources and see where dplyr fits in."
+        }
+    ]
+}

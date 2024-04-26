@@ -1,0 +1,1 @@
+["<h1 class=\"reading\" id=\"r-and-evaluation\">R and evaluation</h1>","<p>Before we dive into the nuts and bolts of how what makes dplyr so powerful in production code, we need to first have a good understanding of the two primary types of evaluation strategies in R. We need to first be able to understand the distinction between eager and lazy evaluation.</p>"]

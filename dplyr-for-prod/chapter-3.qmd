@@ -1,0 +1,136 @@
+---
+title: lazy tables & dtplyr
+description: |
+    Get hands on with lazy tables with the `dtplyr` package. Swapping backends to be used with dplyr is as simple as one extra line of code and the performance gains are nothing to scoff at. 
+---
+
+# Making dplyr lazy {.reading}
+
+dplyr extends this concept of this laziness to data.frames and tables more generally. We'll explore the concept of lazy tables through the package [`{dtplyr}`](https://dtplyr.tidyverse.org/). 
+
+In the R community there has been this debate of base R versus dplyr versus data.table for years now. It is _very_ divisive. It's so divisive that I actually lost a job at DataCamp because of it. Though that's a story to be shared over a beer.
+
+[`data.table`](https://rdatatable.gitlab.io/data.table/) is another data.frame oriented data manipulation package. It is indisputably, until recently with the publication of [`collapse`](https://sebkrantz.github.io/collapse/), the fastest in memory data.frame manipulation package in the R ecosystem. However, to use data.table, one has to learn a fairly idiosyncratic "i, j, by" syntax (data.table uses super-powered version of base R's bracket indexing). Learning a new syntax can be a deterrent which is why I think data.table is not as widely adopted as perhaps ought to be. 
+
+# From dplyr to data.table {.reading}
+
+As a motivating example, let's adapt the example from the [Introduction to data.table](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html) vignette. 
+
+Using the [`nycflights13`](https://cran.r-project.org/web/packages/nycflights13/index.html) dataset, we can count the number of American Airlines flights by origin, destinations, and arrange them. Using traditional dplyr our code might look like this:
+
+```{r}
+library(dplyr)
+library(nycflights13)
+
+flights |>
+  filter(carrier == "AA") |>
+  count(origin, dest) |>
+  arrange(origin, desc(dest))
+```
+
+The same code can be written fairly succinctly with data.table. However, if you don't know the syntax very well, like I don't, it can be quite terse.
+
+```{r}
+library(data.table)
+
+# create a copy so that data.table can modify by reference
+fl <- setDT(copy(flights))
+
+fl[carrier == "AA", .N, by = .(origin, dest)][order(origin, -dest)]
+```
+
+Did it feel faster? 
+
+# Performance matters {.reading}
+
+I don't know if you could tell the difference from this one example, but I can assure you, it _is_ faster. Let's take a look by creating a [`bench::mark()`](https://bench.r-lib.org/).
+
+:::{.callout-note} 
+`bench::mark()` works by providing named expressions that are each evaluated and time multiple times. 
+:::
+
+```{r}
+bench::mark(
+  dplyr = {
+    flights |>
+      filter(carrier == "AA") |>
+      count(origin, dest) |>
+      arrange(origin, desc(dest))
+  },
+  dt = fl[carrier == "AA", .N, by = .(origin, dest)][order(origin, -dest)],
+  check = FALSE
+)
+```
+
+In this bench mark, data.table is just about 4.5 times _faster_ than dplyr! That's nothing to scoff at. Maybe even more significantly, data.table used far less memory! Sure, 10mb isn't too much now. But what about when we're working with 10 million rows in memory? You _will_ feel the difference then.
+
+# The lazy `data.table` {.reading}
+
+To get this level of performance, you don't have to actually start writing data.table code. You can instead use `dtplyr`.
+
+```{r}
+library(dtplyr)
+
+fl_lazy <- lazy_dt(flights)
+
+fl_lazy |>
+  filter(carrier == "AA") |>
+  count(origin, dest) |>
+  arrange(origin, desc(dest))
+```
+
+The `lazy_dt()` function is the key here. It creates a `dtplyr_step` object which allows us to make use of data.table via dplyr functions. The print method of the results are very informative. We'll dive into this in the next section. But before then, Let's make another bench mark to compare the results. Don't worry about all of the code in there, we'll go over it shortly. 
+
+```{r}
+bench::mark(
+  dtplyr = {
+    fl_lazy |>
+      filter(carrier == "AA") |>
+      count(origin, dest) |>
+      arrange(origin, desc(dest)) |>
+      collect()
+  },
+  dt = fl[carrier == "AA", .N, by = .(origin, dest)][order(origin, -dest)],
+  check = FALSE
+)
+```
+
+
+# Understanding the lazy table {.reading}
+
+In the previous section we created what is referred to as a lazy table. Let's spend some time understanding what we did. The function `lazy_dt()` converted our tibble into a _lazy_ data.table. 
+
+The [manual page](https://dtplyr.tidyverse.org/reference/lazy_dt.html) for `lazy_dt()` says
+
+> "A lazy data.table captures the intent of dplyr verbs, only actually performing computation when requested..."
+
+This is similar to the concept of lazy function argument evaluation. But instead of delaying evaluation, dtplyr is building up an expression that will eventually be evaluated. 
+
+```{r}
+res <-
+  fl_lazy |>
+  filter(carrier == "AA") |>
+  count(origin, dest) |>
+  arrange(origin, desc(dest))
+
+res
+```
+
+Above the data preview we can see the `Call` that has been created. dtplyr is _translating_ our dplyr code into data.table code. In essence, our dplyr code is acting as a **front-end** while data.table is acting the **back-end**. In this case, the front-end is the user-facing interface—in this case the user is the developer—and the backend is where the computation is occurring. We can see the translation that dtplyr has built up by using `dplyr::show_query()`.
+
+```{r}
+show_query(res)
+```
+
+dtplyr is essentially acting is a translator between a common syntax in dplyr and an execution engine in data.table. dtplyr is being lazy in that it is not running any code but instead it is building up a set of instructions that will be executed. 
+
+To make dtplyr actually execute the code that it has built up, we need to request the results. This is done by using `dplyr::collect()`.
+
+:::{.callout-note}
+Note that you can also use `as.data.table()`, `as_tibble()`, `as.data.frame()` to bring the results into a data.frame.
+:::
+
+```{r}
+collect(res)
+```
+

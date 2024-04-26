@@ -1,0 +1,51 @@
+---
+title: Introduction
+description: |
+    dplyr is more than just a syntax; it's a frontend UI for data analysis, allowing users to write data manipulation instructions that can be executed in various backends. The dplyr API ecosystem includes packages like dbplyr, multidplyr, and sparklyr, which enable execution of dplyr code in different environments.
+---
+
+# Preface {.reading}
+
+ In this course, I wont teach you to use cool dplyr verbs or teach you about non-standard evaluation. I'm not really interested in it. Nor am I the best person to teach you that. 
+ 
+ Rather, I want to show you dplyr is ready to be used in production as well as teach you how to think about scaling your work. 
+ 
+ Barrier to scaling R in production is less often about technical capability, and more about understanding.
+ 
+ In this chnapter of the course, we wil lay the conceptual foundation. This is arguably the most important bit. I'll try and be concise. 
+
+# Course structure {.reading}
+
+- todo once it has been written
+
+# dplyr's impact {.reading}
+
+dplyr's impact on data science often goes under-recognized. It is known most often for its readable syntax and chainable expression. dplyr's undeniable ergonomics has led to impersonations and derivations across languages: from the many python implementations such as [`siuba`](https://github.com/machow/siuba), [`dplython`](https://pythonhosted.org/dplython/), [`redframes`](https://github.com/maxhumber/redframes), [`dfply`](https://github.com/kieferk/dfply),  and now the great [Ibis](https://ibis-project.org/) project—which, as you'll see, shares more than just syntax—and I'm sure many more. One can also see the influence of dplyr's syntax in [Polars](https://docs.pola.rs/), the powerful rust based dataframe library with navtive bindings to python and community provided bindings to R. The [`TidierData.jl`](https://tidierorg.github.io/TidierData.jl/latest/) library is a 100% Julia implementation that "stick[s] as closely to tidyverse syntax as possible."
+
+They say that imitation is the highest form of flattery. But in this case, I think it also speaks to the impact made by dplyr and the broader tidyverse ecosystem. 
+
+# dplyr as a frontend {.reading}
+
+- dplyr's syntax is undeniably influential 
+- it is easy to use
+- what I want you to take away from this course is this:
+
+dplyr is a frontend UI for data analysis
+
+dplyr is a way of writing data manipulation instructions. Much like how applications will have a pretty frontend UI and an involved backend server process. 
+
+in the subsequent chapters you will see that by writing dplyr, we can also write data.table code, or SQL, or even spark queries. 
+
+# the dplyr API ecoystem {.reading}
+
+- in this course we will look at dplyr as well at dtplyr 
+- there are numerous other packages that let you write dplyr code and execute code elsewhere
+- among them are: 
+    - [`{dbplyr}`]() 
+        - this covers _many_ databases 
+    - [`{multidplyr}`]()
+    - [`{duckdb}`]()
+    - [`{sparklyr}`](https://spark.posit.co/)
+    - [`{arrow}`]()
+    
+- at the end we will cover these packages in more depth as well as when to possibly use them.

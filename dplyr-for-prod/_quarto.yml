@@ -1,0 +1,23 @@
+title: "Scale in production with dplyr"
+author: "Josiah Parry"
+description: |
+  `{dplyr}` is a perfect tool for scaling your analytics work flow. With `dplyr`, the same code can scale from a few thousand rows, tens of thousands, to millions of rows all with very little changes.
+
+  In this course I teach you about eager and lazy evaluation. The `{dtplyr}` package is introduced and used to illustrate how simple dplyr code can be scaled without any changes.
+
+summary: |
+  With nothing but dplyr, scale your data pipelines from thousands to tens of millions of records without changing your code. 
+
+categories: 
+  - dplyr
+  - production
+
+
+theme: none
+highlight-style: none
+eval: false
+embed-resources: true
+
+project:
+  post-render:
+    - parser.R
