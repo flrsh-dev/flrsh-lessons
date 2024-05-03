@@ -10,9 +10,9 @@ description: |
  
  Rather, I want to show you dplyr is ready to be used in production as well as teach you how to think about scaling your work. 
  
- Barrier to scaling R in production is less often about technical capability, and more about understanding.
+ Barriers to scaling R in production is less often about technical capability, and more about having a conceptual undertanding of what to do.
  
- In this chnapter of the course, we wil lay the conceptual foundation. This is arguably the most important bit. I'll try and be concise. 
+ In this chapter of the course, we wil lay the conceptual foundation of why dplyr is a perfect tool for productionizing your code
 
 # Course structure {.reading}
 
@@ -26,26 +26,26 @@ They say that imitation is the highest form of flattery. But in this case, I thi
 
 # dplyr as a frontend {.reading}
 
-- dplyr's syntax is undeniably influential 
-- it is easy to use
-- what I want you to take away from this course is this:
+dplyr's syntax is undeniably influential because it is so easy to use an so influential.
 
-dplyr is a frontend UI for data analysis
+More important than the R package "dplyr", is the philisophical concept it embodies. dplyr is an abstraction layer on top of your data. I want you to think of dplyr as a frontend UI for data analysis. Much like how applications will have a pretty frontend UI that is designed with the end users in mind, dplyr is designed with an unfaltering focus on ergonomics for data scientists. 
 
-dplyr is a way of writing data manipulation instructions. Much like how applications will have a pretty frontend UI and an involved backend server process. 
+Most applications have two components: a "client" side and a "server" side. The UI is the "client" where users interact and the "server" is where computation happens. dplyr, is a client side tool. dplyr is a way of writing data manipulation instructions. These instructions are compiled and handled by a backend process that will execute your code for you.
 
-in the subsequent chapters you will see that by writing dplyr, we can also write data.table code, or SQL, or even spark queries. 
+dplyr's syntax can be used to build an execute massive queries with in Apache Spark & Databricks, Snowflake, Microsoft SQL Server, Amazon Redshift, as well as many other data bases. Or, it can be used to work with data bigger than memory with DuckDB or Apache Arrow. The choice of tool is yours. But with them, you will never have to leave dplyr.
+
+The subsequent chapters will introduce you to working with lazy tables. 
 
 # the dplyr API ecoystem {.reading}
 
-- in this course we will look at dplyr as well at dtplyr 
-- there are numerous other packages that let you write dplyr code and execute code elsewhere
-- among them are: 
-    - [`{dbplyr}`]() 
-        - this covers _many_ databases 
-    - [`{multidplyr}`]()
-    - [`{duckdb}`]()
-    - [`{sparklyr}`](https://spark.posit.co/)
-    - [`{arrow}`]()
+You will learn how to create and work with lazy tables in the context of `data.table` and the `dtplyr` package. These very same principles can be applied to other dplyr back-ends. There are many different backends that you can use with dplyr. 
+
+Among the most popular are: 
+
+- [`{dbplyr}`](https://dbplyr.tidyverse.org/reference/index.html#built-in-database-backends): this covers _many_ databases backends such as ODBC, PostgreSQL, MySQL, and many more.
+- [`{sparklyr}`](https://spark.posit.co/): provides a dplyr, broom, and DBI interface to Apache Spark as well as ML libraries, structured streaming, kubernetes deployments and more.
+- [`{duckdb}`](https://r.duckdb.org/) & [`{duckplyr}`](https://duckdblabs.github.io/duckplyr/): use the powerful DuckDB in memory database all from R
+- [`{arrow}`](https://arrow.apache.org/docs/r/): work with massive datasets of parquet, or csv files using dplyr
+- [`{multidplyr}`](https://github.com/tidyverse/multidplyr/): process data across multiple cores using dplyr
     
-- at the end we will cover these packages in more depth as well as when to possibly use them.
+At the end of the course, we will provide recommendations about how you may walk through these different backends as you scale, or as your usecases change. 

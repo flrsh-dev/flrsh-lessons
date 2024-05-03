@@ -27,7 +27,7 @@ But being quick on the draw is not always the most effective use of time. Someti
 
 # Being lazy pays off {.reading}
 
-<!-- shuold there be a way to click a word and have a popover of the definition? Like a glossary idea ? -->
+<!-- should there be a way to click a word and have a popover of the definition? Like a glossary idea ? -->
 Lazy evaluation, or sometimes referred to as "call-by-need", delays execution until the very last moment. In R, function arguments are lazily evaluated. That means that the value of them are not computed until they are actually needed. This is very powerful! It let's us write code like this: 
 
 ```{r}

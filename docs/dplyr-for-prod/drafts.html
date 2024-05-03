@@ -6,6 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="description" content="I wont teach you how to select columns, filter rows, use cool dplyr verbs or talk about non-standard evaluation. I’m not really interested in that. Nor am I the best person to teach you that. But rather, I want to teach you how dplyr is ready to be used in production. I want to show you how you can write dplyr code that can scale. The same code can run on a few thousand rows, tens of thousands, and millions of rows all with very little change to your existing dplyr code. These lessons are to encourage you to think about your code differently. Not as R code, but as production-grade data engineering code.">
 
 <title>flrsh-site - dplyr is production</title>
 <style>
@@ -146,7 +147,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#outline" id="toc-outline" class="nav-link active" data-scroll-target="#outline">Outline:</a></li>
-  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
   <li><a href="#preface" id="toc-preface" class="nav-link" data-scroll-target="#preface">Preface</a></li>
   <li><a href="#r-and-evaluation" id="toc-r-and-evaluation" class="nav-link" data-scroll-target="#r-and-evaluation">R and evaluation</a></li>
   <li><a href="#what-does-it-mean-to-be-eager" id="toc-what-does-it-mean-to-be-eager" class="nav-link" data-scroll-target="#what-does-it-mean-to-be-eager">What does it mean to be “eager?”</a></li>
@@ -170,6 +170,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1 class="title">dplyr is production</h1>
 </div>
 
+<div>
+  <div class="description">
+    <p>I wont teach you how to select columns, filter rows, use cool dplyr verbs or talk about non-standard evaluation. I’m not really interested in that. Nor am I the best person to teach you that. But rather, I want to teach you how dplyr is ready to be used in production. I want to show you how you can write dplyr code that can scale. The same code can run on a few thousand rows, tens of thousands, and millions of rows all with very little change to your existing dplyr code. These lessons are to encourage you to think about your code differently. Not as R code, but as production-grade data engineering code.</p>
+  </div>
+</div>
 
 
 <div class="quarto-title-meta">
@@ -184,23 +189,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">error =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
 <section id="outline" class="level2">
 <h2 class="anchored" data-anchor-id="outline">Outline:</h2>
 <ul>
-<li>pre-reqs</li>
-<li>preface</li>
 <li>eager evaluation</li>
 <li>lazy evaluation</li>
 <li>lazy tables</li>
-<li>composable codex</li>
 </ul>
-</section>
-<section id="prerequisites" class="level2">
-<h2 class="anchored" data-anchor-id="prerequisites">Prerequisites</h2>
-<p>I wont teach you how to select columns, filter rows, use cool dplyr verbs or talk about non-standard evaluation. I’m not really interested in that. Nor am I the best person to teach you that. But rather, I want to teach you how dplyr is ready to be used in production. I want to show you how you can write dplyr code that can scale. The same code can run on a few thousand rows, tens of thousands, and millions of rows all with very little change to your existing dplyr code. These lessons are to encourage you to think about your code differently. Not as R code, but as production-grade data engineering code.</p>
 </section>
 <section id="preface" class="level2">
 <h2 class="anchored" data-anchor-id="preface">Preface</h2>
@@ -215,24 +210,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="what-does-it-mean-to-be-eager">What does it mean to be “eager?”</h2>
 <p>dplyr, and the vast majority of code that we run in R is eagerly evaluated.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>
-Attaching package: 'dplyr'</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>The following objects are masked from 'package:stats':
-
-    filter, lag</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>The following objects are masked from 'package:base':
-
-    intersect, setdiff, setequal, union</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>skin_colors <span class="ot">&lt;-</span> starwars <span class="sc">|&gt;</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(skin_color) <span class="sc">|&gt;</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="sc">-</span>n)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>skin_colors <span class="ot">&lt;-</span> starwars <span class="sc">|&gt;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(skin_color) <span class="sc">|&gt;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="sc">-</span>n)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>When we execute this expression, it runs right to completion no questions asked. Eager evaluation wants to get the job done right then and there. Most functions that we use in R are eagerly evaluated. You run them, wait for them to come to completion, then have the results.</p>
 <p>But being quick on the draw is not always the most effective use of time. Sometimes it pays to be lazy. This is particularly true when working with large datasets. A less common approach is <em><strong>lazy evaluation</strong></em>.</p>
@@ -242,29 +224,29 @@ Attaching package: 'dplyr'</code></pre>
 <!-- shuold there be a way to click a word and have a popover of the definition? Like a glossary idea ? -->
 <p>Lazy evaluation, or sometimes referred to as “call-by-need”, delays execution until the very last moment. In R, function arguments are lazily evaluated. That means that the value of them are not computed until they are actually needed. This is very powerful! It let’s us write code like this:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>lazyy <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">y =</span> x <span class="sc">+</span> <span class="dv">2</span>) {</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  x <span class="sc">+</span> y</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">lazyy</span>(<span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>lazyy <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">y =</span> x <span class="sc">+</span> <span class="dv">2</span>) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  x <span class="sc">+</span> y</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">lazyy</span>(<span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 6</code></pre>
 </div>
 </div>
 <p>The value of <code>y</code> is set to the value of <code>x</code> plus <code>2</code> but we don’t actually know the value of <code>x</code> until it’s provided as an argument. For a bit clearer example, take, this function.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>hello_world <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"hello world"</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">hello_world</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>hello_world <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"hello world"</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">hello_world</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] "hello world"</code></pre>
 </div>
 </div>
 <p>It prints <code>"hello world"</code>, but did you notice something? We provided an argument <code>x</code>, that is never used! Since the argument <code>x</code> is never used, and arguments are lazily evaluated, it will never be executed. That means we can commit crimes in the x argument but never get caught.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hello_world</span>(<span class="fu">stop</span>(<span class="st">"You shall not pass!!"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hello_world</span>(<span class="fu">stop</span>(<span class="st">"You shall not pass!!"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] "hello world"</code></pre>
 </div>
@@ -272,25 +254,25 @@ Attaching package: 'dplyr'</code></pre>
 <p>We’ve tried to abort the function by calling <code>stop()</code> in the function argument. No dice.</p>
 <p>Let’s try another example where we conditionally evaluate an argument.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>null_or_y <span class="ot">&lt;-</span> <span class="cf">function</span>(x, y) {</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">isTRUE</span>(x)) {</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    y</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="cn">NULL</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>null_or_y <span class="ot">&lt;-</span> <span class="cf">function</span>(x, y) {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">isTRUE</span>(x)) {</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    y</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="cn">NULL</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>With this function we can pass a value of <code>TRUE</code> and it will return the value of <code>y</code>, if the value is <code>FALSE</code>, then function will return <code>NULL</code>.</p>
 <p>When <code>x = TRUE</code>, the argument <code>y</code> is evaluated.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">null_or_y</span>(<span class="cn">TRUE</span>, <span class="fu">stop</span>(<span class="st">"stop right there! 👮🏻‍♂️"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">null_or_y</span>(<span class="cn">TRUE</span>, <span class="fu">stop</span>(<span class="st">"stop right there! 👮🏻‍♂️"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
 <pre><code>Error in null_or_y(TRUE, stop("stop right there! 👮🏻‍♂️")): stop right there! 👮🏻‍♂️</code></pre>
 </div>
 </div>
 <p>However, if we provide <code>FALSE</code>…</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">null_or_y</span>(<span class="cn">FALSE</span>, <span class="fu">stop</span>(<span class="st">"stop right there! 👮🏻‍♂️"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">null_or_y</span>(<span class="cn">FALSE</span>, <span class="fu">stop</span>(<span class="st">"stop right there! 👮🏻‍♂️"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>NULL</code></pre>
 </div>
@@ -309,13 +291,13 @@ Attaching package: 'dplyr'</code></pre>
 <p>As a motivating example, let’s adapt the example from the <a href="https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html">Introduction to data.table</a> vignette.</p>
 <p>Using the <a href="https://cran.r-project.org/web/packages/nycflights13/index.html"><code>nycflights13</code></a> dataset, we can count the number of American Airlines flights by origin, destinations, and arrange them. Using traditional dplyr our code might look like this:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(nycflights13)</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>flights <span class="sc">|&gt;</span></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(carrier <span class="sc">==</span> <span class="st">"AA"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(origin, dest) <span class="sc">|&gt;</span></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(origin, <span class="fu">desc</span>(dest))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(nycflights13)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>flights <span class="sc">|&gt;</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(carrier <span class="sc">==</span> <span class="st">"AA"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(origin, dest) <span class="sc">|&gt;</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(origin, <span class="fu">desc</span>(dest))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 25 × 3
    origin dest      n
@@ -335,48 +317,41 @@ Attaching package: 'dplyr'</code></pre>
 </div>
 <p>The same code can be written fairly succinctly with data.table. However, if you don’t know the syntax very well, like I don’t, it can be quite terse.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>
-Attaching package: 'data.table'</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>The following objects are masked from 'package:dplyr':
-
-    between, first, last</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create a copy so that data.table can modify by reference</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>fl <span class="ot">&lt;-</span> <span class="fu">setDT</span>(<span class="fu">copy</span>(flights))</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>fl[carrier <span class="sc">==</span> <span class="st">"AA"</span>, .N, by <span class="ot">=</span> .(origin, dest)][<span class="fu">order</span>(origin, <span class="sc">-</span>dest)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co"># create a copy so that data.table can modify by reference</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>fl <span class="ot">&lt;-</span> <span class="fu">setDT</span>(<span class="fu">copy</span>(flights))</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>fl[carrier <span class="sc">==</span> <span class="st">"AA"</span>, .N, by <span class="ot">=</span> .(origin, dest)][<span class="fu">order</span>(origin, <span class="sc">-</span>dest)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>    origin dest    N
- 1:    EWR  MIA 1068
- 2:    EWR  LAX  365
- 3:    EWR  DFW 2054
- 4:    JFK  TPA  311
- 5:    JFK  STT  303
- 6:    JFK  SJU 1099
- 7:    JFK  SFO 1422
- 8:    JFK  SEA  365
- 9:    JFK  SAN  365
-10:    JFK  ORD  365
-11:    JFK  MIA 2221
-12:    JFK  MCO  730
-13:    JFK  LAX 3217
-14:    JFK  LAS  639
-15:    JFK  IAH  274
-16:    JFK  FLL  182
-17:    JFK  EGE  103
-18:    JFK  DFW  367
-19:    JFK  BOS 1455
-20:    JFK  AUS  365
-21:    LGA  STL  902
-22:    LGA  PBI   82
-23:    LGA  ORD 5694
-24:    LGA  MIA 3945
-25:    LGA  DFW 4836
-    origin dest    N</code></pre>
+<pre><code>    origin   dest     N
+    &lt;char&gt; &lt;char&gt; &lt;int&gt;
+ 1:    EWR    MIA  1068
+ 2:    EWR    LAX   365
+ 3:    EWR    DFW  2054
+ 4:    JFK    TPA   311
+ 5:    JFK    STT   303
+ 6:    JFK    SJU  1099
+ 7:    JFK    SFO  1422
+ 8:    JFK    SEA   365
+ 9:    JFK    SAN   365
+10:    JFK    ORD   365
+11:    JFK    MIA  2221
+12:    JFK    MCO   730
+13:    JFK    LAX  3217
+14:    JFK    LAS   639
+15:    JFK    IAH   274
+16:    JFK    FLL   182
+17:    JFK    EGE   103
+18:    JFK    DFW   367
+19:    JFK    BOS  1455
+20:    JFK    AUS   365
+21:    LGA    STL   902
+22:    LGA    PBI    82
+23:    LGA    ORD  5694
+24:    LGA    MIA  3945
+25:    LGA    DFW  4836
+    origin   dest     N</code></pre>
 </div>
 </div>
 <p>Did it feel faster? I don’t know if you could tell the difference from this one example, but I can assure you, it <em>is</em> faster. Let’s take a look by creating a <a href="https://bench.r-lib.org/"><code>bench::mark()</code></a>.</p>
@@ -394,35 +369,35 @@ Note
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>bench<span class="sc">::</span><span class="fu">mark</span>(</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">dplyr =</span> {</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    flights <span class="sc">|&gt;</span></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(carrier <span class="sc">==</span> <span class="st">"AA"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">count</span>(origin, dest) <span class="sc">|&gt;</span></span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">arrange</span>(origin, <span class="fu">desc</span>(dest))</span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  },</span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">dt =</span> fl[carrier <span class="sc">==</span> <span class="st">"AA"</span>, .N, <span class="at">by =</span> .(origin, dest)][<span class="fu">order</span>(origin, <span class="sc">-</span>dest)],</span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">check =</span> <span class="cn">FALSE</span></span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>bench<span class="sc">::</span><span class="fu">mark</span>(</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">dplyr =</span> {</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    flights <span class="sc">|&gt;</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(carrier <span class="sc">==</span> <span class="st">"AA"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">count</span>(origin, dest) <span class="sc">|&gt;</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">arrange</span>(origin, <span class="fu">desc</span>(dest))</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  },</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">dt =</span> fl[carrier <span class="sc">==</span> <span class="st">"AA"</span>, .N, <span class="at">by =</span> .(origin, dest)][<span class="fu">order</span>(origin, <span class="sc">-</span>dest)],</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">check =</span> <span class="cn">FALSE</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 2 × 6
   expression      min   median `itr/sec` mem_alloc `gc/sec`
   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;
-1 dplyr        7.73ms   8.37ms      118.   10.35MB     24.7
-2 dt           1.75ms   1.87ms      534.    2.26MB     26.6</code></pre>
+1 dplyr        7.21ms   7.83ms      119.   10.35MB     24.3
+2 dt           1.76ms   1.91ms      513.    2.26MB     24.2</code></pre>
 </div>
 </div>
 <p>In this bench mark, data.table is just about 4.5 times <em>faster</em> than dplyr! That’s nothing to scoff at. Maybe even more significantly, data.table used far less memory! Sure, 10mb isn’t too much now. But what about when we’re working with 10 million rows in memory? You <em>will</em> feel the difference then.</p>
 <p>To get this level of performance, you don’t have to actually start writing data.table code. You can instead use <code>dtplyr</code>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dtplyr)</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>fl_lazy <span class="ot">&lt;-</span> <span class="fu">lazy_dt</span>(flights)</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>fl_lazy <span class="sc">|&gt;</span></span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(carrier <span class="sc">==</span> <span class="st">"AA"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(origin, dest) <span class="sc">|&gt;</span></span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(origin, <span class="fu">desc</span>(dest))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dtplyr)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>fl_lazy <span class="ot">&lt;-</span> <span class="fu">lazy_dt</span>(flights)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>fl_lazy <span class="sc">|&gt;</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(carrier <span class="sc">==</span> <span class="st">"AA"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(origin, dest) <span class="sc">|&gt;</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(origin, <span class="fu">desc</span>(dest))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Source: local data table [25 x 3]
 Call:   setorder(`_DT1`[carrier == "AA"][, .(n = .N), keyby = .(origin, 
@@ -443,23 +418,23 @@ Call:   setorder(`_DT1`[carrier == "AA"][, .(n = .N), keyby = .(origin,
 </div>
 <p>The <code>lazy_dt()</code> function is the key here. It creates a <code>dtplyr_step</code> object which allows us to make use of data.table via dplyr functions. The print method of the results are very informative. We’ll dive into this in the next section. But before then, Let’s make another bench mark to compare the results. Don’t worry about all of the code in there, we’ll go over it shortly.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>bench<span class="sc">::</span><span class="fu">mark</span>(</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">dtplyr =</span> {</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    fl_lazy <span class="sc">|&gt;</span></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(carrier <span class="sc">==</span> <span class="st">"AA"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">count</span>(origin, dest) <span class="sc">|&gt;</span></span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">arrange</span>(origin, <span class="fu">desc</span>(dest)) <span class="sc">|&gt;</span></span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>      <span class="fu">collect</span>()</span>
-<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>  },</span>
-<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">dt =</span> fl[carrier <span class="sc">==</span> <span class="st">"AA"</span>, .N, <span class="at">by =</span> .(origin, dest)][<span class="fu">order</span>(origin, <span class="sc">-</span>dest)],</span>
-<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">check =</span> <span class="cn">FALSE</span></span>
-<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>bench<span class="sc">::</span><span class="fu">mark</span>(</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">dtplyr =</span> {</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    fl_lazy <span class="sc">|&gt;</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(carrier <span class="sc">==</span> <span class="st">"AA"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">count</span>(origin, dest) <span class="sc">|&gt;</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">arrange</span>(origin, <span class="fu">desc</span>(dest)) <span class="sc">|&gt;</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>      <span class="fu">collect</span>()</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  },</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">dt =</span> fl[carrier <span class="sc">==</span> <span class="st">"AA"</span>, .N, <span class="at">by =</span> .(origin, dest)][<span class="fu">order</span>(origin, <span class="sc">-</span>dest)],</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">check =</span> <span class="cn">FALSE</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 2 × 6
   expression      min   median `itr/sec` mem_alloc `gc/sec`
   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;
-1 dtplyr        4.5ms   4.83ms      207.    5.04MB     22.2
-2 dt           1.74ms   1.84ms      543.    2.26MB     24.1</code></pre>
+1 dtplyr       4.24ms   4.57ms      217.    5.04MB     24.1
+2 dt           1.76ms   1.88ms      530.    2.26MB     12.8</code></pre>
 </div>
 </div>
 </section>
@@ -472,13 +447,13 @@ Call:   setorder(`_DT1`[carrier == "AA"][, .(n = .N), keyby = .(origin,
 </blockquote>
 <p>This is similar to the concept of lazy function argument evaluation. But instead of delaying evaluation, dtplyr is building up an expression that will eventually be evaluated.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> </span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    fl_lazy <span class="sc">|&gt;</span></span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(carrier <span class="sc">==</span> <span class="st">"AA"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">count</span>(origin, dest) <span class="sc">|&gt;</span></span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">arrange</span>(origin, <span class="fu">desc</span>(dest))</span>
-<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>res</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  fl_lazy <span class="sc">|&gt;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(carrier <span class="sc">==</span> <span class="st">"AA"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(origin, dest) <span class="sc">|&gt;</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(origin, <span class="fu">desc</span>(dest))</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>res</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Source: local data table [25 x 3]
 Call:   setorder(`_DT1`[carrier == "AA"][, .(n = .N), keyby = .(origin, 
@@ -499,7 +474,7 @@ Call:   setorder(`_DT1`[carrier == "AA"][, .(n = .N), keyby = .(origin,
 </div>
 <p>Above the data preview we can see the <code>Call</code> that has been created. dtplyr is <em>translating</em> our dplyr code into data.table code. In essence, our dplyr code is acting as a <strong>front-end</strong> while data.table is acting the <strong>back-end</strong>. In this case, the front-end is the user-facing interface—in this case the user is the developer—and the backend is where the computation is occurring. We can see the translation that dtplyr has built up by using <code>dplyr::show_query()</code>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">show_query</span>(res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">show_query</span>(res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>setorder(`_DT1`[carrier == "AA"][, .(n = .N), keyby = .(origin, 
     dest)], origin, -dest, na.last = TRUE)</code></pre>
@@ -521,7 +496,7 @@ Note
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect</span>(res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect</span>(res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 25 × 3
    origin dest      n
@@ -547,30 +522,32 @@ Note
 <li>modularity https://ibis-project.org/concepts/composable-ecosystem.html</li>
 </ul>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dtplyr)</span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(nycflights13)</span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> dbplyr<span class="sc">::</span><span class="fu">src_memdb</span>()</span>
-<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="fu">copy_to</span>(con, nycflights13<span class="sc">::</span>flights, <span class="at">name =</span> <span class="st">"flights"</span>)</span>
-<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>flights <span class="ot">&lt;-</span> <span class="fu">tbl</span>(con, <span class="st">"nycflights13::flights"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dtplyr)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(nycflights13)</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> dbplyr<span class="sc">::</span><span class="fu">src_memdb</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-error">
-<pre><code>Error in `db_query_fields.DBIConnection()`:
-! Can't query fields.
-Caused by error:
-! no such table: nycflights13::flights</code></pre>
+<pre><code>Error in (function (cond) : error in evaluating the argument 'drv' in selecting a method for function 'dbConnect': there is no package called 'RSQLite'</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># nothing has happened yet...</span></span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>avg_delay <span class="ot">&lt;-</span> flights <span class="sc">|&gt;</span></span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(month <span class="sc">==</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(carrier) <span class="sc">|&gt;</span></span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
-<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">min_delay =</span> <span class="fu">min</span>(dep_delay),</span>
-<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_delay =</span> <span class="fu">max</span>(dep_delay),</span>
-<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">avg_delay =</span> <span class="fu">mean</span>(dep_delay)</span>
-<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="sc">-</span>avg_delay)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">copy_to</span>(con, nycflights13<span class="sc">::</span>flights, <span class="at">name =</span> <span class="st">"flights"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error in eval(expr, envir, enclos): object 'con' not found</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>flights <span class="ot">&lt;-</span> <span class="fu">tbl</span>(con, <span class="st">"nycflights13::flights"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error in eval(expr, envir, enclos): object 'con' not found</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># nothing has happened yet...</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>avg_delay <span class="ot">&lt;-</span> flights <span class="sc">|&gt;</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(month <span class="sc">==</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(carrier) <span class="sc">|&gt;</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">min_delay =</span> <span class="fu">min</span>(dep_delay),</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_delay =</span> <span class="fu">max</span>(dep_delay),</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">avg_delay =</span> <span class="fu">mean</span>(dep_delay)</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="sc">-</span>avg_delay)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <ul>
 <li>multiple objects</li>

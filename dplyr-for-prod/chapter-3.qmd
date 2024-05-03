@@ -134,3 +134,46 @@ Note that you can also use `as.data.table()`, `as_tibble()`, `as.data.frame()` t
 collect(res)
 ```
 
+
+# Combining Lazy Statement {.exercise}
+
+- lazy tables build up instructions
+- you can store the queries as their own independent objects
+- you can combine multiple of them for example when performing join
+-
+
+
+```{r}
+# Load required libraries
+library(dtplyr)
+library(nycflights13)
+library(dplyr)
+
+# Convert flights and weather to lazy_dt objects
+flights_dt <- lazy_dt(flights)
+weather_dt <- lazy_dt(weather)
+
+# Group and summarize flights
+flights_grouped <- flights_dt %>%
+  group_by(year, month, day) %>%
+  summarise(avg_delay = mean(dep_delay, na.rm = TRUE))
+
+# Group and summarize weather
+weather_grouped <- weather_dt %>%
+  group_by(year, month, day) %>%
+  summarise(avg_temp = mean(temp, na.rm = TRUE))
+
+# Join flights and weather
+joined <- flights_grouped %>%
+  inner_join(weather_grouped, by = c("year", "month", "day"))
+
+show_query(joined)
+# Collect the results
+results <- collect(joined)
+
+# Print results
+print(results)
+
+```
+
+TODO - immutability 
