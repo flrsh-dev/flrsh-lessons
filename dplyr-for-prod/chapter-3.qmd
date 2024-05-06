@@ -41,6 +41,29 @@ fl[carrier == "AA", .N, by = .(origin, dest)][order(origin, -dest)]
 
 Did it feel faster? 
 
+
+:::{.script-pane}
+
+```{r}
+library(dplyr)
+library(data.table)
+library(nycflights13)
+
+# using dplyr
+flights |>
+  filter(carrier == "AA") |>
+  count(origin, dest) |>
+  arrange(origin, desc(dest))
+
+# using data.table
+# create a copy so that can be used by data.table
+fl <- setDT(copy(flights))
+
+fl[carrier == "AA", .N, by = .(origin, dest)][order(origin, -dest)]
+```
+
+:::
+
 # Performance matters {.reading}
 
 I don't know if you could tell the difference from this one example, but I can assure you, it _is_ faster. Let's take a look by creating a [`bench::mark()`](https://bench.r-lib.org/).
@@ -64,7 +87,7 @@ bench::mark(
 
 In this bench mark, data.table is just about 4.5 times _faster_ than dplyr! That's nothing to scoff at. Maybe even more significantly, data.table used far less memory! Sure, 10mb isn't too much now. But what about when we're working with 10 million rows in memory? You _will_ feel the difference then.
 
-# The lazy `data.table` {.reading}
+# The lazy `data.table` {.exercise}
 
 To get this level of performance, you don't have to actually start writing data.table code. You can instead use `dtplyr`.
 
@@ -95,6 +118,19 @@ bench::mark(
 )
 ```
 
+
+:::{.script-pane}
+```{r}
+library(dtplyr)
+
+fl_lazy <- lazy_dt(flights)
+
+fl_lazy |>
+  filter(carrier == "AA") |>
+  count(origin, dest) |>
+  arrange(origin, desc(dest))
+```
+:::
 
 # Understanding the lazy table {.reading}
 
@@ -137,43 +173,51 @@ collect(res)
 
 # Combining Lazy Statement {.exercise}
 
-- lazy tables build up instructions
-- you can store the queries as their own independent objects
-- you can combine multiple of them for example when performing join
--
+So far, we've seen only basic examples. However, these instructions can add up. A common scenario we might find outselves in is creating multiple tables that are the result of some `group_by()` and `summarise()` statement. Then, we take those results, and join them together. 
 
+Lazy tables build up instructions and those instructions are stored in the objects that they are assigned to. Now, theres no reason you have to restrict this behavior to one table at a time. You should continue as you might normally, creating multiple smaller tables that you can join together at a later point.
 
+When you perform operations on these lazy tables together, their instructions are combined together! 
+
+:::{.script-pane}
 ```{r}
 # Load required libraries
+library(dplyr)
 library(dtplyr)
 library(nycflights13)
-library(dplyr)
 
 # Convert flights and weather to lazy_dt objects
 flights_dt <- lazy_dt(flights)
 weather_dt <- lazy_dt(weather)
 
 # Group and summarize flights
-flights_grouped <- flights_dt %>%
-  group_by(year, month, day) %>%
+flights_grouped <- flights_dt |> 
+  group_by(year, month, day) |> 
   summarise(avg_delay = mean(dep_delay, na.rm = TRUE))
 
 # Group and summarize weather
-weather_grouped <- weather_dt %>%
-  group_by(year, month, day) %>%
+weather_grouped <- weather_dt |> 
+  group_by(year, month, day) |> 
   summarise(avg_temp = mean(temp, na.rm = TRUE))
 
 # Join flights and weather
-joined <- flights_grouped %>%
+joined <- flights_grouped |> 
   inner_join(weather_grouped, by = c("year", "month", "day"))
 
+# Show the query that is generated 
 show_query(joined)
-# Collect the results
+
+# Collect the results into memory
 results <- collect(joined)
 
 # Print results
-print(results)
+results
 
 ```
+:::
 
-TODO - immutability 
+:::{.instructions}
+
+Find the average departure delay for each day of the week, for each month and year and join that on to the average temperature for the same day, month, year combination.
+
+:::

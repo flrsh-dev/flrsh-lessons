@@ -6,10 +6,10 @@ description: |
 
 # R and evaluation {.reading}
 
-Before we dive into the nuts and bolts of how what makes dplyr so powerful in production code, we need to first have a good understanding of the two primary types of evaluation strategies in R. We need to first be able to understand the distinction between eager and lazy evaluation. 
+Before we dive into the nuts and bolts of what makes dplyr so powerful in production code, we need to first have a good understanding of the two primary types of evaluation strategies in R. We need to first be able to understand the distinction between eager and lazy evaluation. 
 
 
-# What does it mean to be "eager?" {.reading}
+# What does it mean to be "eager?" {.exercise}
 
 dplyr, and the vast majority of code that we run in R is eagerly evaluated. 
 
@@ -25,10 +25,24 @@ When we execute this expression, it runs right to completion no questions asked.
 
 But being quick on the draw is not always the most effective use of time. Sometimes it pays to be lazy. This is particularly true when working with large datasets. A less common approach is _**lazy evaluation**_.
 
+:::{.script-pane}
+
+```{r}
+library(dplyr)
+
+skin_colors <- starwars |>
+  count(skin_color) |>
+  arrange(-n)
+```
+
+:::
+
+
 # Being lazy pays off {.reading}
 
 <!-- should there be a way to click a word and have a popover of the definition? Like a glossary idea ? -->
-Lazy evaluation, or sometimes referred to as "call-by-need", delays execution until the very last moment. In R, function arguments are lazily evaluated. That means that the value of them are not computed until they are actually needed. This is very powerful! It let's us write code like this: 
+
+Lazy evaluation, or sometimes referred to as "call-by-need", delays execution until the very last moment. In R, function arguments are lazily evaluated. That means that they are not computed until they are actually needed. This is very powerful! It let's us write code like this: 
 
 ```{r}
 lazyy <- function(x, y = x + 2) {
@@ -71,7 +85,6 @@ null_or_y <- function(x, y) {
 
 With this function we can pass a value of `TRUE` and it will return the value of `y`, if the value is `FALSE`, then function will return `NULL`.
 
-
 When `x = TRUE`, the argument `y` is evaluated. 
 
 ```{r error =TRUE}
@@ -86,6 +99,12 @@ null_or_y(FALSE, stop("stop right there! 👮🏻‍♂️"))
 
 No error is emitted, and we get `NULL` returned back to us.
 
-# Create your own lazy function {.reading}
+## Laziness is efficient
 
-TODO make exercise with lazy evaluation in a function
+Being able to effectively harness lazy evaluation may as well be a super power. When done right, it lets us do a lot with very little.
+
+As you'll see in the next chapters, being lazy is what lets dplyr become so useful in so many different contexts. dplyr uses lazy evaluation by collecting instruction, creating a plan of action, then taking action only when explicitly asked. 
+
+
+
+
