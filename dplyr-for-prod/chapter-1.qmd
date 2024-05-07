@@ -10,7 +10,7 @@ description: |
  
  Rather, I want to show you dplyr is ready to be used in production as well as teach you how to think about scaling your work. 
  
- Barriers to scaling R in production is less often about technical capability, and more about having a conceptual undertanding of what to do.
+ Barriers to scaling R in production is less often about technical capability, and more about having a conceptual undertanding of what to do an having a vague idea of what tools are out there. 
  
  In this chapter of the course, we wil lay the conceptual foundation of why dplyr is a perfect tool for productionizing your code
 

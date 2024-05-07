@@ -31,13 +31,7 @@ https://www.datacamp.com/blog/an-introduction-to-duckdb-what-is-it-and-why-shoul
 
 https://duckdb.org/why_duckdb
 
-- "No external dependencies"
-    - entirely self contained 
-    - "embededed within a host process"
-        - results in quick data transfer to and from the db
-- portable: compatible for all major operating systems
-    - can be used on 'edge devices"
-    - can be ran in the browser with DuckDB WASM
+
 - DuckDB uses a columnar memory format
     - vectorized query engine: multiple values are processed per operation
     - this is because it is focused on analytics which is typically focused on whole columns in a table not the individual rows 
@@ -93,7 +87,46 @@ I think it's:
     - duckdb and duckplyr
 - let's work with `duckdb` to start with 
 
-## `{duckdb}` R package
+## What is duckdb?
+
+- a very fast, very portable, and flexible database built specifically for analytics in mind
+- OLAP database
+- "No external dependencies"
+    - entirely self contained 
+    - "embededed within a host process"
+        - results in quick data transfer to and from the db
+- portable: compatible for all major operating systems
+    - can be used on 'edge devices"
+    - can be ran in the browser with DuckDB WASM
+
+## Why is duckdb so powerful? 
+
+- R is vectorized by default which is why its so powerful
+- this means that an operation is done on many pieces of data all at once 
+- duck db is a vectorized query engine. Instead of operating on individual rows, it works on columns
+- additionally, duckdb has a tight integration with Apache Arrow making it able to seemlessly work interchangeably with other tools e.g.
+    - arrow R package
+    - DBI 
+    - polars in R, Python, and Rust
+    - DataFusion in Rust
+
+
+## Columnar vs Row-oriented 
+
+With row-oriented databases you take every single column with a single record
+in analytical workflows we think in terms of a variables and rarely complete records
+A lot of what we do involves aggregating single variables or combining multiple 
+and very rarely do we use all columns in a data set
+Because DuckDB is so focused on the analytical workflow, it is column oriented
+By being able to use only the columns that we need, we are able to use only the data
+that we truly need. 
+
+Apache Arrow is a columnar format just like this. Because of this behavior, the two
+work so well together! 
+
+## DuckDB in the R ecosystem
+
+Two packages: duckdb and duckplyr
 
 - it is a DBI extension package. 
 - it is intended to be used with the DBI R package
@@ -101,6 +134,54 @@ I think it's:
 - This is a huge win. 
 - You don't need to chance your syntax, just your data source 
 
+##  Connecting to duckdb 
+
+Creating duckdb connection objects.
+
+- load duckdb 
+- create a DBI connection object 
+
+`duckdb()` creates an in-memory database. 
+```{r}
+library(duckdb)
+
+con <- dbConnect(duckdb())
+```
+
+### Using duckdb with `data.frame`s
+
+We can leverage dplyr's `copy_to()` to copy a dataframe to our duckdb in-memory database 
+
+```{r}
+library(dplyr)
+
+# copy the df to duckdb
+copy_to(con, flights)
+copy_to(con, weather)
+```
+
 
 https://x.com/mariviere1/status/1787197764163568020
 
+## data import
+
+- supports many different types of files 
+- csv, json, parquet
+- as well as partitioned datasets
+
+its generally better to create a 
+
+## CSVs 
+
+## Parquet
+
+## Other formats 
+
+json, etc
+
+## Partitioned Dataset
+
+- this is the real power
+
+- predicate pushdown
+- range requests 
