@@ -1,0 +1,34 @@
+title: "DuckDB Deep Dive"
+author: "Josiah Parry"
+description: |
+  Since it was first announced in 2019, DuckDB has been revolutionizing what it means to be a database. DuckDB is a zero-dependency and in-process database designed specifically for analytics in mind. It is blazingly fast, efficient, and scalable. 
+
+  In this course you will learn about what makes DuckDB unique compared to its competitors as well as how to harness the `{duckdb}` and `{duckplyr}` packages directly from R. 
+  
+  **Why should you use DuckDB?**
+
+  - DuckDB can complete mid-scale data engineering workflows faster than a Databricks cluster can start up
+  - It is free and open source helping you avoid vendor lock in
+  - Can utilize Apache Arrow for fast and low-cost data transfer between processes
+  - WASM compatible and can be used in browser-only applications 
+  - Speed up Shiny applications
+  - much much more
+
+
+summary: |
+  Explore DuckDB—a fast, zero-dependency, in-process database made for analytics. You will uncover DuckDB's unique features and leverage the `{duckdb}` and `{duckplyr}` packages within R for efficient data analysis, benefiting from its speed and scalability.
+
+categories: 
+  - database
+  - production
+  - duckdb
+
+
+# theme: none
+# highlight-style: none
+# eval: false
+embed-resources: true
+
+# project:
+#   post-render:
+#     - parser.R

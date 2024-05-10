@@ -1,138 +1,23 @@
-Things to answer?
-What is duckdb
-When would you use duckdb?
-
-duckdb vs duckplyr
-loading data
-
-arrow!!!
-
-extensions: talk about them, don't show them
-
-
-## Notes: 
-
-- "SQLite for Analytics"
-- In process / "embedded"
-    - this isn't an external database that you have to make requests to 
-- OLAP "Online analytical processing"
-    - designed specifically with analytics in mind
-- DuckDB is designed for bulk operations. Its is not designed for transactional data
-
-
-## Resources: 
-
-https://bwlewis.github.io/duckdb_and_r/
-https://bwlewis.github.io/duckdb_and_r/talk/talk.html
-https://www.datacamp.com/blog/an-introduction-to-duckdb-what-is-it-and-why-should-you-use-it
-
-
-## Why DuckDB
-
-https://duckdb.org/why_duckdb
-
-
-- DuckDB uses a columnar memory format
-    - vectorized query engine: multiple values are processed per operation
-    - this is because it is focused on analytics which is typically focused on whole columns in a table not the individual rows 
-- MIT licensed means its FREEEEEEE
-
-## Persistence: 
-
-https://duckdb.org/docs/connect/overview
-
-- DuckDB can operate in "persistent" mode where "data is saved to disc" with extension `.duckdb`
-    - this facilitates out-of-core processing
-- Can run in memory by using special `":memory:"
-
-## Concurrency 
-
-2 options
-
-1. Single process to read and write
-    - supports multiple writer threads 
-    - as long as there are no write conflicts, multiple concurrent writes will succeed
-        - try and ensure that a limited number of processes are writing to the DB
-    - append will never conflict
-2. Multiple processes to read from DB but _no_ writing
-
-## Importing Data
-
-- supports traditional insert statements
-    - this is fine for prototyping and inserting single records
-    - should be avoided on the whole-particularly for batches of data 
-
-## CSV support: 
-
-- of course, duckdb supports processing csv. 
-- detect a header
-- like readr, it does a great job of detecting the csv file format
-- it will guess the dialect (what type of delim, quoting, and escape, etc, things we don't want to think about)
-- it will detect the column types
-
-- [`duckdb_read_csv()`](https://r.duckdb.org/reference/duckdb_read_csv.html)
+---
+title: DuckDB Deep Dive
+---
+# Preface
 
 
 
-----------
-
-# Flow? 
-
-Whats the flow here? 
-
-I think it's:
-
-- heres a bit about DuckDB
-- there are two packages that we can use to work with DuckDB in R
-    - duckdb and duckplyr
-- let's work with `duckdb` to start with 
-
-## What is duckdb?
-
-- a very fast, very portable, and flexible database built specifically for analytics in mind
-- OLAP database
-- "No external dependencies"
-    - entirely self contained 
-    - "embededed within a host process"
-        - results in quick data transfer to and from the db
-- portable: compatible for all major operating systems
-    - can be used on 'edge devices"
-    - can be ran in the browser with DuckDB WASM
-
-## Why is duckdb so powerful? 
-
-- R is vectorized by default which is why its so powerful
-- this means that an operation is done on many pieces of data all at once 
-- duck db is a vectorized query engine. Instead of operating on individual rows, it works on columns
-- additionally, duckdb has a tight integration with Apache Arrow making it able to seemlessly work interchangeably with other tools e.g.
-    - arrow R package
-    - DBI 
-    - polars in R, Python, and Rust
-    - DataFusion in Rust
-
-
-## Columnar vs Row-oriented 
-
-With row-oriented databases you take every single column with a single record
-in analytical workflows we think in terms of a variables and rarely complete records
-A lot of what we do involves aggregating single variables or combining multiple 
-and very rarely do we use all columns in a data set
-Because DuckDB is so focused on the analytical workflow, it is column oriented
-By being able to use only the columns that we need, we are able to use only the data
-that we truly need. 
-
-Apache Arrow is a columnar format just like this. Because of this behavior, the two
-work so well together! 
-
-## DuckDB in the R ecosystem
-
-Two packages: duckdb and duckplyr
+### {duckdb}
 
 - it is a DBI extension package. 
 - it is intended to be used with the DBI R package
 - Since it is a DBI extension package, that means it can be used with `dbplyr`. 
 - This is a huge win. 
-- You don't need to chance your syntax, just your data source 
+- You don't need to change your syntax, just your data source 
+
+### {duckplyr}
+
+
+is designed to work strictly on data.frames and in memory. It is more akin to dtplyr for data.table. It is not necessarily designed to be used as a fully functional database. 
+
 
 ##  Connecting to duckdb 
 
@@ -185,3 +70,93 @@ json, etc
 
 - predicate pushdown
 - range requests 
+
+## 
+
+
+TODO:
+try and store example data on S3 via supabase. Hopefully the CDN means that since it is cached it isn't a lot of data or request s made to it. 
+
+
+
+
+
+-------
+
+notes 
+Things to answer?
+What is duckdb
+When would you use duckdb?
+
+duckdb vs duckplyr
+loading data
+
+arrow!!!
+
+extensions: talk about them, don't show them
+
+
+## Notes: 
+
+- "SQLite for Analytics"
+- In process / "embedded"
+    - this isn't an external database that you have to make requests to 
+- OLAP "Online analytical processing"
+    - designed specifically with analytics in mind
+- DuckDB is designed for bulk operations. Its is not designed for transactional data
+
+
+## Resources: 
+
+https://bwlewis.github.io/duckdb_and_r/
+https://bwlewis.github.io/duckdb_and_r/talk/talk.html
+https://www.datacamp.com/blog/an-introduction-to-duckdb-what-is-it-and-why-should-you-use-it
+https://www.pmassicotte.com/posts/2024-05-01-query-s3-duckplyr/#scaling-up-analyzing-a-larger-dataset
+
+
+## Why DuckDB
+
+https://duckdb.org/why_duckdb
+
+
+- DuckDB uses a columnar memory format
+    - vectorized query engine: multiple values are processed per operation
+    - this is because it is focused on analytics which is typically focused on whole columns in a table not the individual rows 
+- MIT licensed means its FREEEEEEE
+
+## Persistence: 
+
+https://duckdb.org/docs/connect/overview
+
+- DuckDB can operate in "persistent" mode where "data is saved to disc" with extension `.duckdb`
+    - this facilitates out-of-core processing
+- Can run in memory by using special `":memory:"
+
+## Concurrency 
+
+2 options
+
+1. Single process to read and write
+    - supports multiple writer threads 
+    - as long as there are no write conflicts, multiple concurrent writes will succeed
+        - try and ensure that a limited number of processes are writing to the DB
+    - append will never conflict
+2. Multiple processes to read from DB but _no_ writing
+
+## Importing Data
+
+- supports traditional insert statements
+    - this is fine for prototyping and inserting single records
+    - should be avoided on the whole-particularly for batches of data 
+
+## CSV support: 
+
+- of course, duckdb supports processing csv. 
+- detect a header
+- like readr, it does a great job of detecting the csv file format
+- it will guess the dialect (what type of delim, quoting, and escape, etc, things we don't want to think about)
+- it will detect the column types
+
+- [`duckdb_read_csv()`](https://r.duckdb.org/reference/duckdb_read_csv.html)
+
+

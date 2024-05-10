@@ -1,0 +1,67 @@
+---
+title: Getting to know DuckDB
+summary: |
+    DuckDB is the SQLite for analytics. Due to its zero-dependencies and portability, it is perfect for using in edge-compute, embedded in the browser, or super-charging your analytic workflows. 
+    
+    In this chapter, you'll get to know what makes DuckDB powerful.
+---
+
+# Why should you care about DuckDB? {.reading}
+
+DuckDB is an **online analytical processing** (OLAP) database. OLAP, a term you may start seeing more of in the future, is a different take on databases. Traditionally, databases have been focused on _transactional_ data. The OLAP approach is focused on _answering questions_ from your data rather than acting on things such as a transaction. Because of this focus, the database is designed differently as you will see later. 
+
+
+## Self-contained
+
+One of DuckDB's defining features is that it is zero-dependency and entirely embedded. This means that DuckDB can be installed just about anywhere without additional database management system (DBMS) software. Being _embedded_ means that DuckDB is integrated
+into the applications that use it making them able to store, retrieve, and manipulate data without needing a separate database server process. This results in lightning fast data transfer into and out of the database. 
+
+Traditional databases are designed to scale outwards across multiple nodes (machines). In contrast, DuckDB is designed as a single node database
+
+{{ TODO single node / embedded vs multi-node image }}
+
+## Edge compute
+
+This portability lends itself to use for **edge computing**. The idea behind edge computing is that data processing can happen closer to where it is needed. You'll often hear of **edge devices** these are things like sensor or other small devices. Traditionally these devices would collect data, sending it off to a server for processing and then await for a response.
+
+{{ TODO placeholder edge compute image }}
+
+Due to DuckDB's relatively small installation size, portability and memory efficiency, much of the necessary computation can happen directly on these devices. For example, DuckDB is compatible with **WebAssembly** (WASM) meaning that it can be used directly in the browser without having to have any additional software installed. This can be a massive advantage when coupled with tools like [`{webr}`](https://webr.r-wasm.org/) and [`{shinylive}`](https://posit-dev.github.io/r-shinylive/).
+
+
+# Why is duckdb so powerful? {.reading}
+
+R is **vectorized** by default. Rather than operating on a single value at a time, a _vectorized_ operation is done on many values _at the same time_. 
+
+DuckDB sets itself apart from traditional databases such as PostgreSQL and SQLite by being vectorized—just like R. DuckDB processes chunks of data simultaneously as opposed to single rows like is typically done. So instead of processing 1 row at a time, DuckDB can process, for example, 1000 rows! This is part of what gives DuckDB its impressive performance. 
+
+## Arrow integration
+
+We won't dive into Apache Arrow, but it is important for you to understand, generally, what it is and wy it is so powerful. 
+
+Apache Arrow is not actually a piece of software. At its core, Apache Arrow is a specficiation (TODO hyperlink) that describes how columnar data should be represented in memory. Many languages have support for Arrow through package or libraries including R. 
+
+Arrow's power is in its adoption elsewhere. Any tools that knows what Arrow arrays look like can use Arrow data needing to restructure it. This allows anything that uses arrow to be able to use the same data regardless of laguage without copying the underlying data!
+
+DuckDB supports Arrow data. This means that in R you can combine DuckDB, {arrow}, {polars}, and even hand the data over to another tool such as DataFusion in Rust or pyarrow in python without having to write it out or copy it! 
+
+By not duplicating the data we save a bunch of computing time and memory space. This is so important! 
+
+TODO https://pola-rs.github.io/r-polars/man/as_polars_df.html
+
+## Columnar vs Row-oriented 
+
+With row-oriented databases you take every single column with a single record
+in analytical workflows we think in terms of a variables and rarely complete records
+A lot of what we do involves aggregating single variables or combining multiple 
+and very rarely do we use all columns in a data set
+Because DuckDB is so focused on the analytical workflow, it is column oriented
+By being able to use only the columns that we need, we are able to use only the data
+that we truly need. 
+
+Apache Arrow is a columnar format just like this. Because of this behavior, the two
+work so well together! 
+
+## DuckDB in the R ecosystem
+
+Two packages: duckdb and duckplyr

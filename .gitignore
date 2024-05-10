@@ -1,3 +1,6 @@
+**/*.parquet
+**/*.zip
+**/*.html
 .Rproj.user
 .Rhistory
 .RData
