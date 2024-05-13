@@ -1,9 +1,9 @@
 ---
-title: Getting to know DuckDB
+title: Building a conceptual foundation 
 summary: |
-    DuckDB is the SQLite for analytics. Due to its zero-dependencies and portability, it is perfect for using in edge-compute, embedded in the browser, or super-charging your analytic workflows. 
-    
     In this chapter, you'll get to know what makes DuckDB powerful.
+
+    DuckDB is the SQLite for analytics. Due to its zero-dependencies and portability, it is perfect for using in edge-compute, embedded in the browser, or super-charging your analytic workflows. This chapter is dedicated to providing you with the conceptual foundations to understand the wider big data ecosystem. We touch on OLAP, edge devices, vectorized compute, Apache Arrow, and row-vs columnar storage. 
 ---
 
 # Why should you care about DuckDB? {.reading}
@@ -35,33 +35,34 @@ R is **vectorized** by default. Rather than operating on a single value at a tim
 
 DuckDB sets itself apart from traditional databases such as PostgreSQL and SQLite by being vectorized—just like R. DuckDB processes chunks of data simultaneously as opposed to single rows like is typically done. So instead of processing 1 row at a time, DuckDB can process, for example, 1000 rows! This is part of what gives DuckDB its impressive performance. 
 
+DuckDB uses what is called a **columnar** storage. In traditional databases, data is stored at the record level. Each record is taken as a whole, then the columns that aren't needed are discarded. In an analytical workflow, this is really inefficient. Because more often or not, you don't care about every single column all at the same time. 
+
+Much of the work that you do involves aggregating single variables, or operations involving one or two columns. Think about the many dplyr pipelines you may have made, these are always (with the exception of [`rowwise()`](https://dplyr.tidyverse.org/articles/rowwise.html)) done in a column-oriented manner—selecting columns, creating or modifying them, mapping across them using [`across()`](https://dplyr.tidyverse.org/reference/across.html).
+
+Columnar storage is much like a data.frame. Data is stored in columns as opposed to each row like in traditional databases. Since each column can be millions, if not billions, of records, these columns are stored in chunks as well. With this approach, if we're performing operations using only two columns—e.g. `price` and `population`—we can completely ignore every other column in the databases and only work with what we need. This saves us precious compute resources. 
+
+DuckDB's "columnar-vectorized query execution engine" makes it ideal to work with columnar storage such as parquet. 
+
 ## Arrow integration
 
-We won't dive into Apache Arrow, but it is important for you to understand, generally, what it is and wy it is so powerful. 
+We won't dive into Apache Arrow now, but it is important for you to understand, generally, what it is and why it is so powerful. 
 
-Apache Arrow is not actually a piece of software. At its core, Apache Arrow is a specficiation (TODO hyperlink) that describes how columnar data should be represented in memory. Many languages have support for Arrow through package or libraries including R. 
+Apache Arrow is not actually a piece of software. At its core, Apache Arrow is a specficiation (TODO hyperlink) that describes how columnar data should be represented in memory. Many languages have support for Arrow through package or libraries including R's [`{arrow}`](https://arrow.apache.org/docs/r/) package. 
 
-Arrow's power is in its adoption elsewhere. Any tools that knows what Arrow arrays look like can use Arrow data needing to restructure it. This allows anything that uses arrow to be able to use the same data regardless of laguage without copying the underlying data!
+{{ TODO image here }}
 
-DuckDB supports Arrow data. This means that in R you can combine DuckDB, {arrow}, {polars}, and even hand the data over to another tool such as DataFusion in Rust or pyarrow in python without having to write it out or copy it! 
+Because Arrow specifies what an array should look like at the lowest level, any tool that knows what Arrow an array looks like can use it. With Arrow, data can be used by multiple tools and processes without having to write out to an intermediary place. Arrow data needing to restructure it. This allows anything that uses arrow to be able to use the same data regardless of laguage without copying the underlying data!
 
-By not duplicating the data we save a bunch of computing time and memory space. This is so important! 
+DuckDB's vectorized layout is quite similar to Apache Arrow. So supporting Arrow requires little overhead for DuckDB. As a result, DuckDB has a very strong Arrow integration. This means that in R you can combine DuckDB, {arrow}, [`{polars}`](https://pola-rs.github.io/r-polars/), and even hand the data over to another tool such as [DataFusion](https://datafusion.apache.org/) in Rust or [`pyarrow`](https://arrow.apache.org/docs/python/index.html) in python without having to write it out or copy it! 
 
-TODO https://pola-rs.github.io/r-polars/man/as_polars_df.html
+By not duplicating the data we save a bunch of computing time and memory space.  
 
-## Columnar vs Row-oriented 
+<!-- TODO https://pola-rs.github.io/r-polars/man/as_polars_df.html -->
 
-With row-oriented databases you take every single column with a single record
-in analytical workflows we think in terms of a variables and rarely complete records
-A lot of what we do involves aggregating single variables or combining multiple 
-and very rarely do we use all columns in a data set
-Because DuckDB is so focused on the analytical workflow, it is column oriented
-By being able to use only the columns that we need, we are able to use only the data
-that we truly need. 
-
-Apache Arrow is a columnar format just like this. Because of this behavior, the two
-work so well together! 
 
 ## DuckDB in the R ecosystem
 
+DuckDB exists in the R ecosystem as two packages. [`{duckdb}`](https://r.duckdb.org/) and [`{duckplyr}`](https://duckdblabs.github.io/duckplyr/)
+
 Two packages: duckdb and duckplyr
+

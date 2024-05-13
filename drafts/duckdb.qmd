@@ -112,6 +112,7 @@ https://bwlewis.github.io/duckdb_and_r/
 https://bwlewis.github.io/duckdb_and_r/talk/talk.html
 https://www.datacamp.com/blog/an-introduction-to-duckdb-what-is-it-and-why-should-you-use-it
 https://www.pmassicotte.com/posts/2024-05-01-query-s3-duckplyr/#scaling-up-analyzing-a-larger-dataset
+https://medium.com/@zujkanovic/exploring-duckdb-and-the-columnar-advantage-f7beb8cbf478
 
 
 ## Why DuckDB
@@ -158,5 +159,17 @@ https://duckdb.org/docs/connect/overview
 - it will detect the column types
 
 - [`duckdb_read_csv()`](https://r.duckdb.org/reference/duckdb_read_csv.html)
+
+
+
+## parquet
+
+we need to spend time here and talk about parquet
+it is columnar 
+it stores metadata in the columns and for each chunk
+using the metadata in the columns, we perform what is called predicate pushdown
+this limits the column chunks that we need to read
+projection limits the columns that are used
+
 
 
