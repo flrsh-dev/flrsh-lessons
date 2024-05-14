@@ -43,7 +43,7 @@ Columnar storage is much like a data.frame. Data is stored in columns as opposed
 
 DuckDB's "columnar-vectorized query execution engine" makes it ideal to work with columnar storage such as parquet. 
 
-## Arrow integration
+# Arrow integration {.reading}
 
 We won't dive into Apache Arrow now, but it is important for you to understand, generally, what it is and why it is so powerful. 
 
@@ -60,9 +60,14 @@ By not duplicating the data we save a bunch of computing time and memory space.
 <!-- TODO https://pola-rs.github.io/r-polars/man/as_polars_df.html -->
 
 
-## DuckDB in the R ecosystem
+# DuckDB in the R ecosystem {.reading}
 
-DuckDB exists in the R ecosystem as two packages. [`{duckdb}`](https://r.duckdb.org/) and [`{duckplyr}`](https://duckdblabs.github.io/duckplyr/)
+DuckDB exists in the R ecosystem as two packages. [`{duckdb}`](https://r.duckdb.org/) and [`{duckplyr}`](https://duckdblabs.github.io/duckplyr/). 
 
-Two packages: duckdb and duckplyr
+`{duckdb}` is a database-interface package that extens the [`{DBI}`](https://dbi.r-dbi.org/) R package. DBI creates an R "front-end" to a database "back-end". In this case, the frontend are the functions exposed in the DBI package _or_ the dplyr interface that is integrate with dplyr: [`{dbplyr}`](https://dbplyr.tidyverse.org/).
+
+Whereas [`{duckplyr}`](https://dbplyr.tidyverse.org/) is intended to be a stand-in replacement for dplyr all together and is intended to work with data.frames only. 
+
+In the following chapters of this course, we will focus on the `{duckdb}` package and its tight integration with `{dbplyr}`.
+
 
