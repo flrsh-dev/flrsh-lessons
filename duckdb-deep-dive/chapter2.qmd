@@ -1,0 +1,152 @@
+---
+title: DuckDB, `{DBI}`, `data.frame`s, and `{dplyr}`.
+---
+
+# Outline: 
+
+- DuckDB and DBI basics
+    - database driver objects `duckdb::duckdb()`
+    - database connection object 
+    - creating tables from dataframes
+    - executing plain SQL queries 
+- using duckdb with dplyr
+    - copying tables over 
+    - creating a tbl connection
+    - basics on lazy eval point to dplyr for production
+    - `show_query()`
+    - in the next section we'll go over how to bring these results into memory and different strategies 
+- to collect(), compute(), or wait.
+    - bring the results into R directly
+        - `collect()` is recommeneded but `as_tibble()` or `as.data.frame()` will work just as well
+    - store our statements by assinging objects. this generates the sql but does not do any execution
+    - we can combine these objects together e.g. subqueries and joins
+    
+
+
+# DuckDB as a database interface {.exercise}
+
+The `{duckdb}` package implements methods for the R functions defined in the `{DBI}`—short for database interface—package. `{DBI}` can be used as a standalone SQL engine from within R. 
+
+> [DBI] supports the following operations: 
+> 
+> -  connect/disconnect to the DBMS
+> - create and execute statements in the DBMS
+> - extract results/output from statements
+> - error/exception handling
+> - information (meta-data) from database objects
+> - transaction management (optional)
+
+DBI works by creating a connection object to a database. Each connection object requires a driver. The driver is what tells DBI how to connect to the database. In the case of DuckDB. You create a DuckDB database driver using the `duckdb()` function. 
+
+```{r}
+library(duckdb)
+driver <- duckdb()
+driver
+```
+
+With the driver, you can create a DBI connection to the database specified by your driver. The `driver` in this case points to an in-memory DuckDB database. 
+
+```{r}
+con <- dbConnect(driver)
+con
+```
+
+With the new connection object, you can begin to interact with the database itself.
+
+You can write a `data.frame` as a table to your database with the `dbWriteTable()` function. Which has three arguments:
+
+- `conn`: the connection object
+- `name`: the name to assign the new table in your database
+- `value`: the data.frame to write
+
+```{r}
+dbWriteTable(con, "flights", nycflights13::flights)
+```
+
+To see the tables in your database us `dbListTables()` on your connection object. 
+
+```{r}
+dbListTables(con)
+```
+
+
+:::{.script-pane}
+
+```{r, eval = FALSE}
+library(duckdb)
+
+# create a connection
+con <- dbConnect(duckdb())
+
+# write a table 
+dbWriteTable(con, ___, ___)
+
+# list tables in the connection
+dbListTables(__)
+```
+:::
+
+:::{.instructions}
+
+- Create a DuckDB database instance using the default driver
+- Write the `flights` data.frame from the `nycflights13` package to your database with the name `"flights"`
+- List the tables in your database and make sure it shows the `flights` table
+
+:::
+
+# DBI basics {.exercise}
+
+
+send queries directly to the database
+
+`dbSendQuery()` sends a query and creates a result. It does not return the results as an R object
+
+
+```{r}
+query <- dbSendQuery(con, "select * from iris")
+query
+```
+
+Bring the results into R as a `data.frame` with `dbFetch()`
+
+```{r}
+res <- dbFetch(query)
+head(res)
+```
+
+You can only fetch the results once! So ensure that you use them or save them when you're done. If we want to try fetching them again, nothing is returned 
+
+```{r}
+dbFetch(query)
+```
+
+This is good. We're making good use of our storage by not storing our data for longer than it is needed. After you fetch this query, the query result should be freed from memory. This is done with `dbClearResult()`
+
+
+```{r}
+dbClearResult(query)
+```
+
+Attempting to fetch the result again results in an error 
+
+```{r, error = TRUE}
+dbFetch(query)
+```
+
+
+This is a bit annoying, huh? A lot to keep track of. If you want to sned a query and fetch the results back into R. `dbGetQuery()`.
+
+Here we count the number of rows for each species 
+
+```{r}
+dbGetQuery(con, "select Species, count(*) as n from iris group by Species")
+```
+
+
+Knowing the basics of DBI can be helpful if you want to integrate existing SQL code into your project or if there are tasks that you find easier to accomplish with SQL instead of writing dplyr code.
+
+
+
+# References 
+
+https://solutions.posit.co/connections/db/r-packages/dbi/
