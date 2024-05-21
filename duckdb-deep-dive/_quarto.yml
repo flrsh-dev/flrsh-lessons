@@ -14,9 +14,18 @@ description: |
   - Speed up Shiny applications
   - much much more
 
+outcomes:
+  - Understand DuckDB's role in edge compute
+  - Analyze larger-than-memory datasets
+  - Work with partitioned parquet datasets 
+  - Scale analytics using dplyr and dbplyr
+  - Create persistent databases using DuckDB's file format
+  - Complete starter project to use DuckDB in a Shiny app
+  - Comes with all source code and files
+
 
 summary: |
-  Explore DuckDB—a fast, zero-dependency, in-process database made for analytics. You will uncover DuckDB's unique features and leverage the `{duckdb}` and `{duckplyr}` packages within R for efficient data analysis, benefiting from its speed and scalability.
+  DuckDB is a fast, zero-dependency, in-process database made for data scientists. Lean on DuckDB's tight R integration to scale to larger-than-memory workloads.
 
 categories: 
   - database

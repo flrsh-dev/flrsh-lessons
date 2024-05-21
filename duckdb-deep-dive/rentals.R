@@ -2,7 +2,7 @@ library(dplyr)
 library(dbplyr)
 library(duckdb)
 
-con <- dbConnect(duckdb())
+con <- dbConnect(duckdb("duckdb-deep-dive/taxi.duckdb"))
 
 taxi <- tbl(
   con,

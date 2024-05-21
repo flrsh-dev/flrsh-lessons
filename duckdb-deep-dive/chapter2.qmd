@@ -44,7 +44,7 @@ driver <- duckdb()
 driver
 ```
 
-With the driver, you can create a DBI connection to the database specified by your driver. The `driver` in this case points to an in-memory DuckDB database. 
+Using the driver, you can create a connection to the database using DBI. The `driver` in this case points to an in-memory DuckDB database. The database connection object is created using `dbConnect()`. This is a `DBI` function that duckdb has implemented a method for. 
 
 ```{r}
 con <- dbConnect(driver)
@@ -53,11 +53,13 @@ con
 
 With the new connection object, you can begin to interact with the database itself.
 
-You can write a `data.frame` as a table to your database with the `dbWriteTable()` function. Which has three arguments:
+You can write a `data.frame` as a table to your database with the `dbWriteTable()` function which has three arguments:
 
 - `conn`: the connection object
 - `name`: the name to assign the new table in your database
 - `value`: the data.frame to write
+
+Below, the `flights` dataset from the `nycflights13` package is written to the database. 
 
 ```{r}
 dbWriteTable(con, "flights", nycflights13::flights)
@@ -69,6 +71,7 @@ To see the tables in your database us `dbListTables()` on your connection object
 dbListTables(con)
 ```
 
+In the next exercise, you will learn how to query the database directly using DBI.
 
 :::{.script-pane}
 
@@ -96,8 +99,9 @@ dbListTables(__)
 
 # DBI basics {.exercise}
 
+The `{DBI}` package provides all of the utilities that you need to create and execute queries, manage tables, and anything else you might need. In this exercise we'll cover the basic utilites in `DBI`. In reality, you will likely not need these often but you should know that they exist. 
 
-send queries directly to the database
+DBI allows you to send any SQL query queries directly to the database 
 
 `dbSendQuery()` sends a query and creates a result. It does not return the results as an R object
 
