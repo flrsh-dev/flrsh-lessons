@@ -1,237 +1,179 @@
-library(dplyr)
-library(dbplyr)
-library(duckdb)
-library(ggplot2)
 library(bslib)
-library(shinyWidgets)
 library(shiny)
-library(sf)
 library(rdeck)
+library(dplyr)
+library(duckdb)
 library(plotly)
-library(lubridate)
+library(bsicons)
+library(thematic)
+library(shinyWidgets)
 
-con <- dbConnect(duckdb("duckdb-deep-dive/taxi.duckdb"))
+con <- duckdb::dbConnect(duckdb("data/dc-bike-share.duckdb"))
 
-taxi <- tbl(
-  con,
-  "read_parquet('taxi-data-2019-partitioned/*/*.parquet')"
+# This will be the table that we base everything off of.
+trips_clean <- tbl(con, "trips") |>
+  mutate(
+    started_at = as_datetime(started_at),
+    ended_at = as_datetime(ended_at),
+    # this is a DuckDB function
+    duration = datediff("second", started_at, ended_at),
+    .before = 1
+  ) |>
+  # trip has to be longer than 1 minute and less than 18 hours
+  filter(duration >= 60, duration < 18 * 60 * 60)
+
+# create the first interactive graphic
+# then we will render this and update it interactively
+rd <- rdeck(
+  # mapbox_light(),
+  initial_view_state = view_state(
+    center = c(-77.10584, 38.95139),
+    zoom = 10,
+    pitch = 45
+  )
 )
 
-locs_raw <- sf::read_sf("data/taxi-zones/taxi_zones.shp") |>
-  select(loc_id = LocationID) |>
-  sf::st_transform(4326)
-
-pickups <- taxi |>
-  filter(fare_amount > 0, pickup_datetime <= "2019-01-07") |>
-  group_by(pickup_location_id) |>
-  summarise(frequency = n()) |>
-  collect()
-
-deck_df <- left_join(
-  locs_raw,
-  pickups,
-  by = c("loc_id" = "pickup_location_id")
-) |>
-  mutate(frequency = coalesce(frequency, 0))
-
-
-
-rd <- rdeck(
-  initial_view_state = view_state(
-    center = {
-      sf::st_bbox(deck_df) |>
-        sf::st_as_sfc() |>
-        sf::st_centroid()
-    }[[1]],
-    zoom = 10,
-    # bearing = 45,
-    pitch = 90
-  )
-) |>
-  add_polygon_layer(
-    data = deck_df,
-    id = "freqs",
-    pickable = TRUE,
-    auto_highlight = TRUE,
-    extruded = TRUE,
-    get_polygon = geometry,
-    get_fill_color = scale_color_linear(frequency),
-    opacity = 0.25
-  )
-
-
-times_range_raw <- taxi |>
-  summarise(min_dt = min(pickup_datetime), max_dt = max(pickup_datetime)) |>
-  collect()
-
-# dataset for the initial plot to be rendered
-initial_plot_data <- taxi |>
-  filter(fare_amount > 0) |>
-  mutate(
-    hour = lubridate::hour(pickup_datetime),
-    dow = lubridate::wday(pickup_datetime, label = TRUE),
-  ) |>
-  group_by(dow, hour) |>
-  summarise(
-    avg_tip = sum(tip_amount, na.rm = TRUE) / sum(total_amount),
-    .groups = "drop"
-  ) |>
-  collect()
-
-
-
-create_date_range <- function(month) {
-  start_date <- as_date(paste0("2019-", month, "-01"))
-  end_date <- ceiling_date(start_date, "month") - 1
-
-  n_days <- end_date - start_date
-  seq(start_date, end_date, length.out = as.integer(n_days))
+#' This function creates the data to create the
+#' trip duration heatmaps
+create_plot_data <- function(.data) {
+  .data |>
+    mutate(
+      hour = lubridate::hour(started_at),
+      dow = lubridate::wday(started_at, label = TRUE)
+    ) |>
+    group_by(hour, dow) |>
+    summarise(avg_duration_mins = mean(duration / 60), .groups = "drop") |>
+    collect()
 }
 
-# Helper to generate the heat map via ggplot
-heatmap_plot <- function(data) {
-  ggplot(data, aes(dow, hour, fill = avg_tip)) +
-    geom_tile() +
-    scale_fill_viridis_c(option = "magma") +
-    theme_minimal() +
-    labs(x = "", y = "")
-}
-
+thematic::thematic_on()
+# ?bs_theme()
 
 ui <- page_sidebar(
+  theme = bs_theme(bootswatch = "darkly"),
   sidebar = sidebar(
-    pickerInput(
-      inputId = "month",
-      label = "Choose a month",
-      choices = month.abb
+    width = 325,
+    dateRangeInput(
+      "date_range",
+      "Choose a date range",
+      min = "2023-01-01",
+      max = "2023-12-31",
+      start = "2023-05-01",
+      end = "2023-06-30"
     ),
     sliderTextInput(
-      inputId = "date_range",
-      label = "Choose a range:",
-      choices = seq(as.Date("2019-01-01"), as.Date("2019-01-31"), length.out = 31),
-      selected = c(as.Date("2019-01-01"), as.Date("2019-01-31"))
+      inputId = "trip_duration",
+      label = "Max trip duration (hours)",
+      choices = 0:12,
+      selected = c(0, 12)
+    ),
+    pickerInput(
+      "bike_type",
+      "Rideshare type",
+      choices = c(
+        "Docked" = "docked_bike",
+        "Classic" = "classic_bike",
+        "Electric" = "electric_bike"
+      ),
+      multiple = TRUE,
+      selected = c("docked_bike", "classic_bike", "electric_bike")
+    ),
+    sliderInput(
+      "hex_width",
+      "Hexagon Width (meters)",
+      min = 10,
+      max = 2000,
+      value = 250,
+      ticks = FALSE
     )
   ),
   layout_columns(
     card(
-      card_body(rdeckOutput("map"))
+      card_header("Trip start location"),
+      rdeckOutput("hex_map")
     ),
-    card(
-      value_box("Number of records", 69420),
-      card_body(plotly::plotlyOutput("heatmap"), fillable = TRUE)
-    )
+    layout_columns(
+      value_box(
+        "Total trips",
+        value = textOutput("n_trips"),
+        showcase = bs_icon("bicycle")
+      ),
+      card(
+        card_header("Average trip duration"),
+        plotlyOutput("heatmap")
+      ),
+      col_widths = 12
+    ),
+    col_widths = 6
   )
 )
 
 
 server <- function(input, output, session) {
-  # reactive data
-  heatmap_data <- reactive({
-    date_range <- as.POSIXct(input$date_range, tz = "UTC")
-    res <- taxi |>
-      filter(
-        fare_amount > 0,
-        pickup_datetime >= local(date_range[1]),
-        pickup_datetime <= local(date_range[2])
-      ) |>
-      mutate(
-        hour = lubridate::hour(pickup_datetime),
-        dow = lubridate::wday(pickup_datetime, label = TRUE),
-      ) |>
-      group_by(dow, hour) |>
-      summarise(
-        avg_tip = sum(tip_amount, na.rm = TRUE) / sum(total_amount),
-        # avg_tip = mean(total_amount, na.rm = TRUE),
-        .groups = "drop"
-      ) |>
-      collect()
-
-    res
-  })
-
   filtered_data <- reactive({
-    res <- trip_counts(taxi, locs_raw, input$date_range[1], input$date_range[2])
-    res
-  })
-
-
-  # render the initial map
-  output$map <- renderRdeck(rd)
-
-  observe({
-    rdeck_proxy("map") |>
-      add_polygon_layer(
-        data = filtered_data(),
-        id = "freqs",
-        pickable = TRUE,
-        auto_highlight = TRUE,
-        extruded = TRUE,
-        get_polygon = geometry,
-        get_fill_color = scale_color_linear(frequency),
-        opacity = 0.25
+    trips_clean |>
+      filter(
+        rideable_type %in% local(input$bike_type),
+        started_at <= local(input$date_range[2]),
+        started_at >= local(input$date_range[1]),
+        # less than duration in hours
+        duration / 60 / 60 >= local(input$trip_duration[1]),
+        duration / 60 / 60 <= local(input$trip_duration[2])
+      ) |>
+      collect() |>
+      mutate(
+        start_loc = wk::xy(start_lng, start_lat, 4326),
+        end_loc = wk::xy(end_lng, end_lat, 4326)
       )
   })
 
-  observeEvent(input$month, {
-    updateSliderTextInput(
-      session,
-      "date_range",
-      choices = create_date_range(input$month)
-    )
-  })
-
-  output$heatmap <- plotly::renderPlotly({
-    taxi |>
-      filter(fare_amount > 0) |>
-      mutate(
-        hour = hour(pickup_datetime),
-        dow = wday(pickup_datetime, label = TRUE),
-      ) |>
-      group_by(dow, hour) |>
-      summarise(
-        avg_tip = sum(tip_amount, na.rm = TRUE) / sum(total_amount),
-        .groups = "drop"
-      ) |>
-      collect() |>
-      heatmap_plot()
-  })
-
-  # render the first plot
-  output$heatmap <- renderPlotly(heatmap_plot(heatmap_data()))
-}
-
-
-
-shiny::shinyApp(ui, server)
-
-trip_counts <- function(.df, .sdf, min_date, max_date) {
-  pickups <- .df |>
-    filter(
-      fare_amount > 0,
-      trip_distance > 0,
-      pickup_datetime >= min_date,
-      pickup_datetime <= max_date
+  # update heatmap as data is filtered
+  output$heatmap <- renderPlotly({
+    plot_ly(
+      create_plot_data(filtered_data()),
+      x = ~dow,
+      y = ~hour,
+      z = ~avg_duration_mins, type = "heatmap"
     ) |>
-    group_by(pickup_location_id) |>
-    summarise(frequency = n()) |>
-    collect()
+      layout(
+        font = list(color = "white"),
+        paper_bgcolor = "rgba(0, 0, 0, 0)",
+        showlegend = FALSE
+      )
+  })
 
-  left_join(
-    .sdf,
-    pickups,
-    by = c("loc_id" = "pickup_location_id")
-  ) |>
-    mutate(frequency = coalesce(frequency, 0))
+  # initialize the rdeck output
+  output$hex_map <- renderRdeck(rd)
+
+  # this will update it as needed
+  observe({
+    rdeck_proxy("hex_map") |>
+      add_hexagon_layer(
+        id = "trip_source",
+        data = filtered_data(),
+        coverage = 1,
+        pickable = TRUE,
+        auto_highlight = TRUE,
+        radius = input$hex_width,
+        extruded = TRUE,
+        opacity = 0.9,
+        get_position = start_loc,
+        color_range = c(
+          rgb(1, 152, 189, maxColorValue = 255),
+          rgb(73, 227, 206, maxColorValue = 255),
+          rgb(216, 254, 181, maxColorValue = 255),
+          rgb(254, 237, 177, maxColorValue = 255),
+          rgb(254, 173, 84, maxColorValue = 255),
+          rgb(209, 55, 78, maxColorValue = 255)
+        )
+      )
+  })
+
+  output$n_trips <- renderText({
+    n_trips <- collect(count(filtered_data()))$n
+    scales::comma(n_trips)
+  })
 }
 
-# use this to reactively update the plot
-# we should only allow one month at a time
 
-# update_polygon_layer(
-#   rd,
-#   id = "freqs",
-#   data = mutate(deck_df, frequency = frequency / 1000),
-#   get_elevation = frequency,
-#   get_fill_color = scale_color_linear(frequency),
-#   opacity = 0.25
-# )
+shinyApp(ui, server)
