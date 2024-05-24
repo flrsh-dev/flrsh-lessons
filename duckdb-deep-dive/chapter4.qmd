@@ -1,0 +1,14 @@
+persistence is the key
+out-of-core processing
+why i recommend duckdb over duckplyr
+the true scalability of duckdb 
+
+
+# Bulk importing CSV
+
+if you have a lot of data in csv files
+you can import it into your duckdb database use duckdb_read_csv() iterativeyl
+
+" This usually is much faster than reading the data into R and writing it to DuckDB."
+
+- `duckdb_read_csv()`

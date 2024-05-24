@@ -1,0 +1,3 @@
+extensions 
+reading remote files / files over https 
+using duckdb specific functions 

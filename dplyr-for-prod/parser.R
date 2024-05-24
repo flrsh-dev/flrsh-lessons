@@ -16,6 +16,10 @@
 #'  - rvest
 #'  - xml2
 #'  - jsonify
+#'
+#' TODO:
+#' automatic syntax highlighting using downlit https://github.com/r-lib/downlit/blob/main/R/downlit-md.R
+#' this will help boost SEO i believe
 parse_exercise <- function(x) {
   # pre-allocate list to fill
   res <- list(

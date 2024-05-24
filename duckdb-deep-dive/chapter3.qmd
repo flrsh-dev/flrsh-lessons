@@ -1,6 +1,148 @@
-importing data
+---
+title: Importing Data
+--- 
+
+# Getting data in
+
+In this chapter you will learn how to read
+
+- [`csv`](https://en.wikipedia.org/wiki/Comma-separated_values) files ([doc](https://duckdb.org/docs/data/csv/overview))
+- [`parquet`](https://parquet.apache.org/) files ([doc](https://duckdb.org/docs/data/parquet/overview))
+- many files at once ([doc](https://duckdb.org/docs/data/multiple_files/overview))
+- parititioned datasets ([doc](https://duckdb.org/docs/data/partitioning/hive_partitioning))
 
 
-`tbl_file()`
-`duckdb_read_csv()`
-`read_parquet()`
+------------
+
+
+A database isn't much use without any data. Traditionally, databases load data using an `INSERT INTO` statement. Fortunately, DuckDB has made it much easier to import data into your database. 
+
+Out of the box, DuckDB supports the most common analytical data file types: 
+
+- CSV
+- Parquet
+- JSON
+
+Additionally, DuckDB supports other strategies commonly employed when storing larger data on disc. You may have your data stored as many CSVs in a directory: 
+
+```
+orders
+├── file001.csv
+├── file002.csv
+├── file003.csv
+├── file004.csv
+└── file005.csv
+```
+
+Or, your data may be stored using the Hive partitioning strategy. Below is the example [used in the DuckDB documentation](https://duckdb.org/docs/data/partitioning/hive_partitioning.html)
+
+```
+orders
+├── year=2021
+│    ├── month=1
+│    │   ├── file1.parquet
+│    │   └── file2.parquet
+│    └── month=2
+│        └── file3.parquet
+└── year=2022
+     ├── month=11
+     │   ├── file4.parquet
+     │   └── file5.parquet
+     └── month=12
+         └── file6.parquet
+```
+
+Next, we'll focus on importing individual files into your database.
+
+# Reading CSV files
+
+While we in the data science community like to talk about the importance and benefit of using columnar data storage formats like parquet, we cannot deny that csv files are still the most common format. We will start there. 
+
+Like the tidyverse's [`{readr}`](https://readr.tidyverse.org/) has a function `read_csv()`, so too does DuckDB have a `read_csv()` function! `read_csv()` is a SQL function that is used to create a table reference. The DuckDB CSV reader is ridiculously performant and robust. 
+
+> "All clean CSVs are alike; each messy CSV is messy in its own way." - Leo Quackstoy
+
+ The developers at [MotherDuck](https://motherduck.com/) have put a lot of effort into being able to handle the many edge cases that are encountered when working with CSV files. They have a [**CSV Sniffer**](https://duckdb.org/2023/10/27/csv-sniffer) which automatically [detects and handles errors](https://duckdb.org/docs/data/csv/reading_faulty_csv_files) and problems. 
+
+## Read using SQL 
+
+To illustrate how to use the CSV reader, we should start in SQL. First we create an in-memory database.
+
+```{r}
+library(dplyr)
+library(duckdb)
+
+# create the connection
+con <- dbConnect(duckdb())
+```
+
+Next, we can count the number of records in a CSV file. We will use the `data/COBRA-2022.csv` file. It contains data from Atlanta PD's [Open Data Portal](https://opendata.atlantapd.org/).
+
+The query is very simple, it counts the number of rows. However, rather than pointing to a table directly like one would do with a `from` statement, the `read_csv()` function is used with a path to the file that needs to be read.
+
+```{r}
+# Create a query
+query <- "
+select count(*) as n
+from read_csv('data/COBRA-2022.csv')
+"
+
+dbGetQuery(con, query)
+```
+
+For about 90% of use cases, you will not need to modify any of the parameters in the `read_csv()` function. But, in the event that you do you can specify them in line. Some of the important parameters that you might want to know that exist are: 
+
+- `columns`: key-value pairs of the column name to type to parse it as
+- `delim`: value delimeter. For example set `delim = "|"` when using pipe separated values
+- `names`: the column names to use e.g. `["id", "name", "value"]`
+
+# Creating lazy tables from CSV
+
+You now know how to read a csv file using DuckDB and SQL directly. The goal isn't for you to learn SQL, but to appreciate and have a vague understanding of what is happening behind the scenes. The SQL `read_csv()` function is abstracted away from you, generally, by the `duckdb::tbl_file()` function. 
+
+`tbl_file()` will create a lazy table from a DuckDB DBI connection and path to a file. 
+
+```{r}
+crimes <- tbl_file(con, "data/COBRA-2022.csv")
+crimes
+```
+
+Alternatively, the `tbl()` function from `dplyr` can be used. This function requires the name of the table that you want to use. However, the CSV does not yet exist in the database. So when using the `tbl()` function, you must use the DuckDB `read_csv()` function inside of it. 
+
+The equivalent code is: 
+
+```{r}
+tbl(con, 'read_csv("data/COBRA-2022.csv")')
+```
+
+## When should I use `tbl()` over `tbl_file()`?
+
+Wow, great question! I'm so glad you asked that. 
+
+You should use `tbl_file()` in almost all circumstances. When `tbl_file()` fails you, it is likely because you need to pass additional arguments to DuckDB's CSV sniffer directly. And to do that, you will need to use the `dplyr::tbl()` function instead. 
+
+
+# Reading Parquet
+
+
+
+- `tbl(con, 'read_parquet()')`
+
+- compressed CSV
+
+# Importing partitioned data 
+
+- many csv files
+- many parquet files 
+
+# Hive partitioning
+
+- the approach is generally the same
+- its useful to understand hive partitioning
+
+```{r}
+tbl(con, "taxi-data-2019-partitioned/**/*.parquet")
+```
+
+
+https://duckdb.org/docs/data/partitioning/hive_partitioning
