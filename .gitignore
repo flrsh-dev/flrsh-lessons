@@ -10,3 +10,5 @@
 .Ruserdata
 
 /.quarto/
+data/*
+data-raw/*

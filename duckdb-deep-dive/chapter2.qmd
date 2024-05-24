@@ -101,31 +101,27 @@ dbListTables(__)
 
 The `{DBI}` package provides all of the utilities that you need to create and execute queries, manage tables, and anything else you might need. In this exercise we'll cover the basic utilites in `DBI`. In reality, you will likely not need these often but you should know that they exist. 
 
-DBI allows you to send any SQL query queries directly to the database 
-
-`dbSendQuery()` sends a query and creates a result. It does not return the results as an R object
+DBI allows you to send any SQL query directly to the database using `dbSendQuery()`. This function sends a query and creates a result. It does not, however, return the results as an R object.
 
 
 ```{r}
-query <- dbSendQuery(con, "select * from iris")
+query <- dbSendQuery(con, "select * from flights")
 query
 ```
 
-Bring the results into R as a `data.frame` with `dbFetch()`
+With this we've only just executed the query. But to bring the results into R as a `data.frame` you need to _fetch_ the results using `dbFetch()`. `dbFetch()` is executed on the result object itself.
 
 ```{r}
 res <- dbFetch(query)
 head(res)
 ```
 
-You can only fetch the results once! So ensure that you use them or save them when you're done. If we want to try fetching them again, nothing is returned 
-
+It is important to note that you can only fetch the results once! So ensure that you use the results or save them when you're done. If we want to try fetching them again, nothing is returned: 
 ```{r}
 dbFetch(query)
 ```
 
 This is good. We're making good use of our storage by not storing our data for longer than it is needed. After you fetch this query, the query result should be freed from memory. This is done with `dbClearResult()`
-
 
 ```{r}
 dbClearResult(query)
@@ -138,16 +134,106 @@ dbFetch(query)
 ```
 
 
-This is a bit annoying, huh? A lot to keep track of. If you want to sned a query and fetch the results back into R. `dbGetQuery()`.
+This is a bit annoying though, huh? A lot to keep track of. If you want to send a query and fetch the results back into R, the process is simplified with `dbGetQuery()`.
 
-Here we count the number of rows for each species 
+Instead, we can count the number of flights per month and bring the results back into R in one fell swoop using `dbGetQuery()`. 
 
 ```{r}
-dbGetQuery(con, "select Species, count(*) as n from iris group by Species")
+dbGetQuery(con, "select month, count(*) as n from flights group by month")
 ```
 
 
-Knowing the basics of DBI can be helpful if you want to integrate existing SQL code into your project or if there are tasks that you find easier to accomplish with SQL instead of writing dplyr code.
+Knowing the basics of DBI can be helpful if you want to integrate existing SQL code into your project or if there are tasks that you find easier to accomplish with SQL instead of writing dplyr code. You can do almost complete database administration using `DBI`. With familiarity of the basics of DBI, you should be able to navigate the documentation and figure out anything else you might need to do. 
+
+Of course, this requires that you know SQL. And honestly? I'm not really a fan of SQL. It's not that I'm against it, it's just that it's yet another thing to remember. So why not use something we already know? This is why `dplyr` and `dbplyr` are so great! 
+
+
+# Using dplyr with DuckDB
+
+The main selling point of DuckDB as an R user is its integration with dplyr. As discussed in the course [Zero to Prod with dplyr](TODO), dplyr is not only data manipulation library. Instead, it has become a syntax for data analysis. dplyr provides a standard syntax for data manipulation. It is a frontend that can be applied to many backends. 
+
+In our case, we will use dplyr as a frontend to a DuckDB backend. 
+
+## Table connections 
+
+In our DuckDB database, we created a table, `flights`. 
+
+```{r}
+dbListTables(con)
+```
+
+We saw how it can be queried using DBI and standard SQL. But instead, it is much easier to work with these tables using dplyr and the syntax that we know and love. 
+
+Similar to the database connection object we created using `duckdb()` we need to create a reference to a table. With dplyr, this is done using the `tbl()` function. We need to provide it with two arguments: 
+
+- `con`: the connection object
+- `...`: the name (quoted) of the table that we want to access
+
+To create a reference to the flights table in the DuckDB database use `tbl(con, "flights")`.
+
+```{r}
+library(dplyr)
+
+# create a connection to the flights database table
+fl <- tbl(con, "flights")
+fl
+```
+
+With this, you now have access to a lazy table that references the table in the database. 
+
+# Lazy mother ducks
+
+The table connections that are created by dplyr when working with any database connection are **lazy** in nature. 
+
+```{r}
+class(fl)
+```
+
+Notice the `tbl_lazy` subclass. This is really important. It means that everything we do on the table will not actually execute unless we demand it of the table. 
+
+For example, say you were interested in all flights that departed _early_ and wanted to know how much earlier those flights arrived on average based on the airline carrier. You might write some dplyr code like this: 
+
+```{r}
+early_deps <- fl |> 
+    filter(dep_delay < 0) |> 
+    group_by(carrier) |> 
+    summarise(
+        avg_dep_delay = mean(dep_delay, na.rm = TRUE),
+        avg_arr_delay = mean(arr_delay, na.rm = TRUE)
+    ) |> 
+    arrange(avg_arr_delay)
+
+early_deps
+```
+
+Notice that this is still a lazy table and _not_ a tibble or a dataframe. Instead, it is just a collection of SQL instructions that will be sent to the database. To get insight into what is being sent to the database, use `show_query()`
+
+```{r}
+show_query(early_deps)
+```
+
+# Collecting query results 
+
+In order to use the results of this query with most other R packages, it wil need to be brought into memory as an object that R natively knows how to work with. In the case of SQL tables and queries, this is a data.frame. 
+
+To finally execute the query, you must run `dplyr::collect()`. This forces the database to run the query and fetch the results into memory. Remember the three step process of `dbSendQuery()`, `dbFetch()`, and `dbClearResult()`? dplyr will handle _all_ of this overhead for you! 
+
+```{r}
+early_df <- collect(early_deps)
+early_df
+```
+
+With this, you can now work with the data in memory as you would want to for example to use with something like `ggplot2`, `plotly`, `gt` or else.
+
+I cannot express this enough: 
+
+Bring into memory **as little data as possible**.
+
+The purpose of using lazy tables and databases is that it offloads the computation from R into the databases that are expertly designed for these processes. If you collect results early _and then_ filter and summarise your results, you will have a bad time and will be no better off than having read everything into memory to begin with. So, heed my advice! 
+
+`collect()` as late as possible!
+
+# Combining lazy tables 
 
 
 
