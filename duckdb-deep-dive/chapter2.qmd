@@ -2,6 +2,8 @@
 title: DuckDB, `{DBI}`, `data.frame`s, and `{dplyr}`.
 ---
 
+<!--
+
 # Outline: 
 
 - DuckDB and DBI basics
@@ -20,7 +22,8 @@ title: DuckDB, `{DBI}`, `data.frame`s, and `{dplyr}`.
         - `collect()` is recommeneded but `as_tibble()` or `as.data.frame()` will work just as well
     - store our statements by assinging objects. this generates the sql but does not do any execution
     - we can combine these objects together e.g. subqueries and joins
-    
+
+-->
 
 
 # DuckDB as a database interface {.exercise}
@@ -235,8 +238,49 @@ The purpose of using lazy tables and databases is that it offloads the computati
 
 # Combining lazy tables 
 
+We just saw how dplyr will lazily create SQL for you using the `show_query()` function. In the previous exercise, we stored the average departure and arrival delays for early flights. What if we wanted to find the opposite? Where we find the departure and arrival delay for _late_ flights? This would look very similar
+
+```{r}
+late_deps <- early_deps <- fl |> 
+    filter(dep_delay > 0) |> 
+    group_by(carrier) |> 
+    summarise(
+        avg_dep_delay = mean(dep_delay, na.rm = TRUE),
+        avg_arr_delay = mean(arr_delay, na.rm = TRUE)
+    ) 
+
+show_query(late_deps)
+```
+
+In order to combine these results, we can join on the `carrier` name. We can do this with these lazy tables! And performing operations on them together will create more SQL optimized SQL code on your behalf. 
+
+```{r}
+all_dep_delays <- left_join(
+    early_deps, 
+    late_deps,
+    by = "carrier",
+    suffix = c("_early", "_late")
+)
+
+show_query(all_dep_delays)
+```
 
 
+These lazy tables can be combined in any of the ways in which you would normally use a tibble. Lean on them to simplify your code and your workflows and only collect the results when you need to have a data.frame. 
+
+:::{.callout-tip}
+If you find yourself using dplyr verbs after calling `collect()` there is a good chance that you collected too early and could have offloaded your work to DuckDB.
+
+The more data you collect, the more data you have to store in memory and the slower your R code will become. 
+:::
+
+
+All of what we have covered has been in the context of objects that are already in R's memory. However, the key utility of DuckDB is its ability to work lazily over files without reading them into memory. 
+
+In the next chapter we will go over data import using DuckDB. 
+
+
+<!-- 
 # References 
 
-https://solutions.posit.co/connections/db/r-packages/dbi/
+https://solutions.posit.co/connections/db/r-packages/dbi/ -->
