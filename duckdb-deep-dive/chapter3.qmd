@@ -122,18 +122,76 @@ Wow, great question! I'm so glad you asked that.
 You should use `tbl_file()` in almost all circumstances. When `tbl_file()` fails you, it is likely because you need to pass additional arguments to DuckDB's CSV sniffer directly. And to do that, you will need to use the `dplyr::tbl()` function instead. 
 
 
-# Reading Parquet
+# TL;DR: Parquet
+
+Another increasingly common file type is Parquet. Before diving into how to read a parquet file, it would behoove you to know _why_ parquet is so great. Like Apache Arrow & DuckDB, Parquet is columnar.
+
+**The difference between Arrow and Parquet** is that  
+
+:::{.text-3xl .text-center}
+Apache Arrow is an _in memory_ representation whereas parquet is an _on disc_ format.
+:::
+
+Parquet is how you _store_ data whereas Arrow is how you hold data in memory after you read it! We won't go into detail into how and why parquet is so wonderful but at a highlevel there are some key concepts that you need to understand. 
+
+## Why Parquet is so efficient 
+
+First, the data is **stored by column**. This means that when you read from a parquet file you can read only the columns you need. Selecting only the columns you need from a parquet file is called [**projection**](https://arrow.apache.org/blog/2022/12/26/querying-parquet-with-millisecond-latency/#projection-pushdown).
+
+Next, **each column itself is partitioned into chunks**. These column chunks can be as large or small as you'd like. Finding a happy medium is important. Each **column chunk has associated metadata**. For example, if you are storing a numeric column, the metadata of the column chunk will contain the minimum and maximum values for that chunk. Using this metadata you can filter out rows that are not needed in your analysis. This is called [**predicate pushdown**](https://arrow.apache.org/blog/2022/12/26/querying-parquet-with-millisecond-latency/#predicate-pushdown).
+
+ For example, the chunk has a minimum value of 10 and a maximum value of 200 but your query fitlers to values less than 0, you know that you can safely skip reading an entire group of rows. Reading in as little data as possible is a key pattern of working with big data and parquet helps you do this efficiently. 
+
+Lastly, and just as important, parquet utilizes a number of compression algorithms to effectively reduce the overall size of the files. Compression allows the file size to be smaller than the amount of data stored in the file. Read the [DuckDB blog post](https://duckdb.org/2024/03/26/42-parquet-a-zip-bomb-for-the-big-data-age.html) about how a 42kb file can store more than 4 petabytes of data. 
+
+There are, as always, a number of considerations to make in deciding if parquet files are right for you. But as a data scientists, it is important for you to know what they are and how they work so _you_ can make that informed decision!
+
+## To recap
+
+Parquet
+
+- stores data by columns allowing for **projection**
+- each column is chunked into `n` values,
+- column chunks have associated metadata allowing for **predicate pushdown**,
+- applies compression algorithms to ensure smaller file sizes.
 
 
+# Reading Parquet 
 
-- `tbl(con, 'read_parquet()')`
+DuckDB makes reading parquet files really easy. In fact, it is even easier than reading CSV files and even more flexible. When used with SQL and DuckDB, you can provide the path of the parquet directly in the `FROM` clause. 
 
-- compressed CSV
+```{r}
+dbGetQuery(con, "select count(*) as n from 'data/yellowcab/week-1.parquet'")
+```
 
-# Importing partitioned data 
+Just like using `tbl_file()` with the path of a csv file, the same can be done for parquet. 
 
-- many csv files
-- many parquet files 
+```{r}
+tbl_file(con, "data/yellowcab/week-1.parquet")
+```
+
+However, it is common to have your dataset partitioned over multiple files. You can create a single table from multiple files in a few ways. 
+
+First, you can use DuckDB's `read_parquet()` function which allows you to specify an array of files to be read together as a single table like so: `read_parquet(['file1.parquet', 'file2.parquet'])`
+
+```{r}
+tbl(
+  con,
+  "read_parquet(['data/yellowcab/week-1.parquet', 'data/yellowcab/week-2.parquet'])"
+)
+```
+
+More often than not, though, a whole directory will be dedicated to storing a single table in many parquet files. This can be specified using glob syntax. 
+
+In the case of the `yellowcab/` directory there are 5 parquet files. These can all be read using the path `"data/yellowcab/*.parquet"`.
+
+```{r}
+tbl(con, "data/yellowcab/*.parquet")
+```
+
+:::{.callout-tip}
+This same syntax can be used for csv files!
+:::
 
 # Hive partitioning
 

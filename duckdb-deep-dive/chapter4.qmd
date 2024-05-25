@@ -3,6 +3,7 @@ out-of-core processing
 why i recommend duckdb over duckplyr
 the true scalability of duckdb 
 
+- duckdb file format
 
 # Bulk importing CSV
 
