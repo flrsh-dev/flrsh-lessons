@@ -1,9 +1,9 @@
 library(dplyr)
 library(lightparser)
 
-in_file <- "duckdb-deep-dive/chapter2.qmd"
+# in_file <- "duckdb-deep-dive/chapter2.qmd"
 
-parse_chapter(in_file)
+# parse_chapter(in_file)
 
 # Each exercise is a single string
 # The first one contains the yaml front matter. It can be ommitted.
@@ -87,12 +87,17 @@ parse_chapter <- function(in_file) {
     lapply(combine_tbl_to_file) |>
     vapply(parse_exercise, character(1))
 
-  tibble(
+  exercises <- Map(
+    \(.title, .slug) {
+      list(title = .title, slug = .slug)
+    },
+    exercise_titles,
+    heck::to_kebab_case(exercise_titles)
+  ) |> unname()
+
+  list(
     chapter_title = front$title,
-    content = list(tibble(
-      title = exercise_titles,
-      body = exercises
-    ))
+    exercises = exercises
   )
 }
 
@@ -101,6 +106,14 @@ parse_course <- function(chapters) {
   chapts
 }
 
-r <- parse_course(c("duckdb-deep-dive/chapter1.qmd", "duckdb-deep-dive/chapter2.qmd"))
+r <- parse_course(
+  c(
+    "duckdb-deep-dive/chapter1.qmd",
+    "duckdb-deep-dive/chapter2.qmd",
+  )
+)
 
-bind_rows(r, .id = "chapter")
+# create json, this can be copied into the Rust source as a const
+# we can think about automating to
+list(chapters = r) |>
+  jsonify::to_json(unbox = T)

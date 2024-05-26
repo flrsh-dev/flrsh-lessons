@@ -1,5 +1,6 @@
 ---
 title: DuckDB, `{DBI}`, `data.frame`s, and `{dplyr}`.
+eval: false
 ---
 
 # DuckDB as a database interface {.exercise}
@@ -78,10 +79,16 @@ dbListTables(__)
 
 # DBI basics {.exercise}
 
+```{r include = FALSE}
+# set up chunk
+library(duckdb)
+con <- dbConnect(duckdb())
+dbWriteTable(con, "flights", nycflights13::flights)
+```
+
 The `{DBI}` package provides all of the utilities that you need to create and execute queries, manage tables, and anything else you might need. In this exercise we'll cover the basic utilites in `DBI`. In reality, you will likely not need these often but you should know that they exist. 
 
 DBI allows you to send any SQL query directly to the database using `dbSendQuery()`. This function sends a query and creates a result. It does not, however, return the results as an R object.
-
 
 ```{r}
 query <- dbSendQuery(con, "select * from flights")
@@ -129,6 +136,13 @@ Of course, this requires that you know SQL. And honestly? I'm not really a fan o
 
 # Using dplyr with DuckDB
 
+```{r include  = FALSE}
+# setup chunk
+library(duckdb)
+con <- dbConnect(duckdb())
+dbWriteTable(con, "flights", nycflights13::flights)
+```
+
 The main selling point of DuckDB as an R user is its integration with dplyr. As discussed in the course [Zero to Prod with dplyr](TODO), dplyr is not only data manipulation library. Instead, it has become a syntax for data analysis. dplyr provides a standard syntax for data manipulation. It is a frontend that can be applied to many backends. 
 
 In our case, we will use dplyr as a frontend to a DuckDB backend. 
@@ -162,6 +176,25 @@ With this, you now have access to a lazy table that references the table in the 
 
 # Lazy mother ducks
 
+```{r include  = FALSE}
+# setup chunk
+library(duckdb)
+con <- dbConnect(duckdb())
+dbWriteTable(con, "flights", nycflights13::flights)
+
+library(dplyr)
+fl <- tbl(con, "flights")
+
+early_deps <- fl |> 
+    filter(dep_delay < 0) |> 
+    group_by(carrier) |> 
+    summarise(
+        avg_dep_delay = mean(dep_delay, na.rm = TRUE),
+        avg_arr_delay = mean(arr_delay, na.rm = TRUE)
+    ) |> 
+    arrange(avg_arr_delay)
+```
+
 The table connections that are created by dplyr when working with any database connection are **lazy** in nature. 
 
 ```{r}
@@ -193,6 +226,24 @@ show_query(early_deps)
 
 # Collecting query results 
 
+```{r include  = FALSE}
+# setup chunk
+library(duckdb)
+con <- dbConnect(duckdb())
+dbWriteTable(con, "flights", nycflights13::flights)
+
+library(dplyr)
+fl <- tbl(con, "flights")
+early_deps <- fl |> 
+    filter(dep_delay < 0) |> 
+    group_by(carrier) |> 
+    summarise(
+        avg_dep_delay = mean(dep_delay, na.rm = TRUE),
+        avg_arr_delay = mean(arr_delay, na.rm = TRUE)
+    ) |> 
+    arrange(avg_arr_delay)
+```
+
 In order to use the results of this query with most other R packages, it wil need to be brought into memory as an object that R natively knows how to work with. In the case of SQL tables and queries, this is a data.frame. 
 
 To finally execute the query, you must run `dplyr::collect()`. This forces the database to run the query and fetch the results into memory. Remember the three step process of `dbSendQuery()`, `dbFetch()`, and `dbClearResult()`? dplyr will handle _all_ of this overhead for you! 
@@ -213,6 +264,23 @@ The purpose of using lazy tables and databases is that it offloads the computati
 `collect()` as late as possible!
 
 # Combining lazy tables 
+
+
+```{r include  = FALSE}
+# setup chunk
+library(duckdb)
+con <- dbConnect(duckdb())
+dbWriteTable(con, "flights", nycflights13::flights)
+early_deps <- fl |> 
+    filter(dep_delay < 0) |> 
+    group_by(carrier) |> 
+    summarise(
+        avg_dep_delay = mean(dep_delay, na.rm = TRUE),
+        avg_arr_delay = mean(arr_delay, na.rm = TRUE)
+    ) |> 
+    arrange(avg_arr_delay)
+```
+
 
 We just saw how dplyr will lazily create SQL for you using the `show_query()` function. In the previous exercise, we stored the average departure and arrival delays for early flights. What if we wanted to find the opposite? Where we find the departure and arrival delay for _late_ flights? This would look very similar
 
