@@ -195,11 +195,25 @@ This same syntax can be used for csv files!
 
 # Hive partitioning
 
+
+- autodetected by default when the folders are named with the `key=value`
+
+```
+orders
+└── year=2022
+     └── month=11
+         ├── file4.parquet
+         └── file5.parquet
+```
+
 - the approach is generally the same
 - its useful to understand hive partitioning
 
 ```{r}
-tbl(con, "taxi-data-2019-partitioned/**/*.parquet")
+tbl(con, "taxi-data-2019-partitioned/**/*.parquet") |>
+  group_by(vendor_name) |>
+  count()
+tbl(con, "read_parquet('taxi-data-2019-partitioned/**/*.parquet', hive_partitioning = true)")
 ```
 
 

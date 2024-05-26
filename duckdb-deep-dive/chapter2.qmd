@@ -2,30 +2,6 @@
 title: DuckDB, `{DBI}`, `data.frame`s, and `{dplyr}`.
 ---
 
-<!--
-
-# Outline: 
-
-- DuckDB and DBI basics
-    - database driver objects `duckdb::duckdb()`
-    - database connection object 
-    - creating tables from dataframes
-    - executing plain SQL queries 
-- using duckdb with dplyr
-    - copying tables over 
-    - creating a tbl connection
-    - basics on lazy eval point to dplyr for production
-    - `show_query()`
-    - in the next section we'll go over how to bring these results into memory and different strategies 
-- to collect(), compute(), or wait.
-    - bring the results into R directly
-        - `collect()` is recommeneded but `as_tibble()` or `as.data.frame()` will work just as well
-    - store our statements by assinging objects. this generates the sql but does not do any execution
-    - we can combine these objects together e.g. subqueries and joins
-
--->
-
-
 # DuckDB as a database interface {.exercise}
 
 The `{duckdb}` package implements methods for the R functions defined in the `{DBI}`—short for database interface—package. `{DBI}` can be used as a standalone SQL engine from within R. 
@@ -281,6 +257,4 @@ In the next chapter we will go over data import using DuckDB.
 
 
 <!-- 
-# References 
-
 https://solutions.posit.co/connections/db/r-packages/dbi/ -->

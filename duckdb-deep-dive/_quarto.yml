@@ -1,5 +1,19 @@
 title: "DuckDB Deep Dive"
 author: "Josiah Parry"
+
+project:
+  type: book
+
+book:
+  chapters:
+    - index.qmd
+    - chapter1.qmd
+    - chapter2.qmd
+    - chapter3.qmd
+    - chapter4.qmd
+    - chapter5.qmd
+
+
 description: |
   Since it was first announced in 2019, DuckDB has been revolutionizing what it means to be a database. DuckDB is a zero-dependency and in-process database designed specifically for analytics in mind. It is blazingly fast, efficient, and scalable. 
 
@@ -35,8 +49,8 @@ categories:
 
 # theme: none
 # highlight-style: none
-# eval: false
-embed-resources: true
+eval: false
+# embed-resources: true
 
 # project:
 #   post-render:
